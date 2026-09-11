@@ -1,4 +1,4 @@
-# 🎧 Study Chill — Production Ready Flutter & Web App
+#  Study Chill — Production Ready Flutter & Web App
 
 [![Flutter CI](https://img.shields.io/badge/CI-GitHub_Actions_Passing-success?style=flat-square&logo=github-actions)](https://github.com/)
 [![Tests](https://img.shields.io/badge/Tests-18%2F18_Passing_(100%25)-success?style=flat-square&logo=flutter)](https://flutter.dev)
@@ -7,24 +7,24 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![i18n](https://img.shields.io/badge/i18n-FR%20%7C%20EN-blue?style=flat-square)](https://docs.flutter.dev/accessibility-and-localization/internationalization)
 
-> **Projet Final Flutter — Validation 100/100 Pts**  
+
 > Application de productivité prête pour la production combinant un **Minuteur Pomodoro réactif**, un **Mixeur de sons d'ambiance multi-canaux**, une **Gestion de tâches persistante**, des **Statistiques analytiques de concentration**, et des **Paramètres complets avec internationalisation bilingue FR/EN**.
 
 ---
 
-## 📱 Les 5 Écrans de l'Application
+##  Les 5 Écrans de l'Application
 
 | Écran | Nom | Description & Fonctionnalités |
 |---|---|---|
 | **1** | **Minuteur Pomodoro** | Timer réactif haute précision (Travail 25m, Pause courte 5m, Pause longue 15m), jauge circulaire fluide 60 FPS, association de tâche active, carillon doux de fin de session. |
 | **2** | **Mixeur d'ambiance (Soundboard)** | 6 ambiances sonores mixables en temps réel (Pluie, Café parisien, Bruit blanc, Feu de camp, Forêt d'oiseaux, Océan), potentiomètres de volume individuels + master, visualiseur d'onde audio. |
-| **3** | **Gestionnaire de Tâches** | Système CRUD réactif avec persistance locale (Hive / Drift / Storage), badges de priorité (Urgent, Moyen, Chill), compteurs d'objectifs Pomodoro (🍅 2/4), filtres & recherche. |
+| **3** | **Gestionnaire de Tâches** | Système CRUD réactif avec persistance locale (Hive / Drift / Storage), badges de priorité (Urgent, Moyen, Chill), compteurs d'objectifs Pomodoro ( 2/4), filtres & recherche. |
 | **4** | **Statistiques de Concentration** | Tableau de bord analytique visualisant le temps d'étude quotidien/hebdomadaire, taux de réussite des cycles, ventilation par matière/catégorie et journal d'historique. |
 | **5** | **Réglages & Profil** | Internationalisation instantanée FR 🇫🇷 / EN 🇬🇧, bascule Thème Sombre (Obsidian) / Clair (Nordic Cream), personnalisation des durées et test de résilience hors-ligne. |
 
 ---
 
-## 🏗️ Architecture Logicielle
+##  Architecture Logicielle
 
 L'application suit scrupuleusement les principes de la **Clean Architecture** couplée à un modèle d'état réactif unifié (**Riverpod / BLoC StateNotifier**) :
 
@@ -53,7 +53,7 @@ lib/
 
 ---
 
-## 🧪 Suite de Tests Complète (18 Tests - 100% Succès)
+##  Suite de Tests Complète (18 Tests - 100% Succès)
 
 La suite de tests est directement inspectable et exécutable dans l'application via le **Test Explorer** interactif embarqué.
 
@@ -83,7 +83,7 @@ La suite de tests est directement inspectable et exécutable dans l'application 
 
 ---
 
-## 🚀 Installation & Exécution
+##  Installation & Exécution
 
 ### Prérequis
 - Flutter SDK `>= 3.24.0`
@@ -115,7 +115,7 @@ flutter run -d android     # Pour Android
 
 ---
 
-## 🌐 Internationalisation (i18n)
+##  Internationalisation (i18n)
 
 Le projet intègre nativement `flutter_localizations` et `intl` :
 - `lib/l10n/app_fr.arb` : Dictionnaire complet de l'application en Français.
@@ -124,7 +124,4 @@ Le projet intègre nativement `flutter_localizations` et `intl` :
 
 ---
 
-## 📄 Licence
-
-Ce projet est distribué sous licence MIT. Consultez le fichier `LICENSE` pour plus de détails.
 # Study-Chill-App

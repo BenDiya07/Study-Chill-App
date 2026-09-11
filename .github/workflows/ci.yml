@@ -1,0 +1,69 @@
+name: Flutter CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  analyze_and_test:
+    name: Lint, Static Analysis & Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17 (for Android build tools)
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+          cache-key: "flutter-:os:-:channel:-:version:-:keys-"
+
+      - name: Verify Flutter Installation
+        run: flutter doctor -v
+
+      - name: Install Project Dependencies
+        run: flutter pub get
+
+      - name: Generate Localizations
+        run: flutter gen-l10n
+
+      - name: Verify Code Formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Static Code Analysis (`flutter analyze`)
+        run: flutter analyze --fatal-infos --fatal-warnings
+
+      - name: Run Unit & Widget Tests
+        run: |
+          flutter test --coverage --reporter=expanded
+          echo "All unit and widget tests passed with 100% success rate."
+
+      - name: Run Integration Tests
+        run: |
+          flutter test integration_test/app_integration_test.dart
+          echo "Integration tests passed successfully."
+
+      - name: Build Web App Bundle
+        run: flutter build web --release --pwa-strategy=offline-first
+
+      - name: Build Android Release APK
+        run: flutter build apk --release --split-per-abi
+
+      - name: Upload Test Coverage Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lcov-coverage-report
+          path: coverage/lcov.info
+          retention-days: 14

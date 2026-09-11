@@ -1,0 +1,6 @@
+{
+  "name": "Study Chill App",
+  "description": "Production-ready productivity Flutter application with Pomodoro timer, ambient sound mixer, task management, analytics, i18n FR/EN, and complete 10+ unit, 5+ widget, 2+ integration test suite.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
