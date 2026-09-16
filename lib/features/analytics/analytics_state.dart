@@ -4,28 +4,28 @@ import '../../core/constants/app_constants.dart';
 import '../../core/utils/stats_calculator.dart';
 import '../../core/utils/time_formatter.dart';
 
-part 'session_model.g.dart';
+part 'analytics_state.g.dart';
 
 @HiveType(typeId: 1)
 class SessionRecord extends HiveObject {
   @HiveField(0)
   final String id;
-  
+
   @HiveField(1)
   final String taskId;
-  
+
   @HiveField(2)
   final String category;
-  
+
   @HiveField(3)
   final int durationSeconds;
-  
+
   @HiveField(4)
   final TimerMode mode;
-  
+
   @HiveField(5)
   final DateTime timestamp;
-  
+
   @HiveField(6)
   final bool completed;
 
@@ -40,24 +40,24 @@ class SessionRecord extends HiveObject {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'taskId': taskId,
-    'category': category,
-    'durationSeconds': durationSeconds,
-    'mode': mode.name,
-    'timestamp': timestamp.toIso8601String(),
-    'completed': completed,
-  };
+        'id': id,
+        'taskId': taskId,
+        'category': category,
+        'durationSeconds': durationSeconds,
+        'mode': mode.name,
+        'timestamp': timestamp.toIso8601String(),
+        'completed': completed,
+      };
 
   factory SessionRecord.fromJson(Map<String, dynamic> json) => SessionRecord(
-    id: json['id'] as String,
-    taskId: json['taskId'] as String,
-    category: json['category'] as String,
-    durationSeconds: json['durationSeconds'] as int,
-    mode: TimerMode.values.byName(json['mode'] as String),
-    timestamp: DateTime.parse(json['timestamp'] as String),
-    completed: json['completed'] as bool? ?? true,
-  );
+        id: json['id'] as String,
+        taskId: json['taskId'] as String,
+        category: json['category'] as String,
+        durationSeconds: json['durationSeconds'] as int,
+        mode: TimerMode.values.byName(json['mode'] as String),
+        timestamp: DateTime.parse(json['timestamp'] as String),
+        completed: json['completed'] as bool? ?? true,
+      );
 }
 
 class SessionRepository {
@@ -72,20 +72,27 @@ class SessionRepository {
 
   List<SessionRecord> getAll({DateTime? start, DateTime? end}) {
     var sessions = _box.values.toList();
-    
+
     if (start != null) {
-      sessions = sessions.where((s) => s.timestamp.isAfter(start) || s.timestamp.isAtSameMomentAs(start)).toList();
+      sessions = sessions
+          .where((s) =>
+              s.timestamp.isAfter(start) || s.timestamp.isAtSameMomentAs(start))
+          .toList();
     }
     if (end != null) {
-      sessions = sessions.where((s) => s.timestamp.isBefore(end) || s.timestamp.isAtSameMomentAs(end)).toList();
+      sessions = sessions
+          .where((s) =>
+              s.timestamp.isBefore(end) || s.timestamp.isAtSameMomentAs(end))
+          .toList();
     }
-    
+
     sessions.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return sessions;
   }
 
-  Stream<List<SessionRecord>> watchAll() {
-    return _box.watch().map((_) => getAll());
+  Stream<List<SessionRecord>> watchAll() async* {
+    yield getAll();
+    yield* _box.watch().map((_) => getAll());
   }
 
   Future<void> addSession(SessionRecord session) async {
@@ -109,8 +116,8 @@ final sessionsProvider = StreamProvider<List<SessionRecord>>((ref) {
 final analyticsProvider = Provider<AnalyticsData>((ref) {
   final sessionsAsync = ref.watch(sessionsProvider);
   return sessionsAsync.when(
-    data: (sessions) => AnalyticsData.fromSessions(sessions),
-    loading: () => AnalyticsData.empty(),
+    data: AnalyticsData.fromSessions,
+    loading: AnalyticsData.empty,
     error: (_, __) => AnalyticsData.empty(),
   );
 });
@@ -135,33 +142,44 @@ class AnalyticsData {
   });
 
   factory AnalyticsData.empty() => const AnalyticsData(
-    totalFocusMinutes: 0,
-    totalSessions: 0,
-    currentStreak: 0,
-    completionRate: 0,
-    dailyMinutes: {},
-    categoryMinutes: {},
-    recentSessions: [],
-  );
+        totalFocusMinutes: 0,
+        totalSessions: 0,
+        currentStreak: 0,
+        completionRate: 0,
+        dailyMinutes: {},
+        categoryMinutes: {},
+        recentSessions: [],
+      );
 
   factory AnalyticsData.fromSessions(List<SessionRecord> sessions) {
-    final workSessions = sessions.where((s) => s.mode == TimerMode.work).toList();
+    final workSessions =
+        sessions.where((s) => s.mode == TimerMode.work).toList();
     final completedSessions = sessions.where((s) => s.completed).toList();
-    
+
     return AnalyticsData(
-      totalFocusMinutes: StatsCalculator.computeTotalMinutes(workSessions.map((s) => s.durationSeconds).toList()),
+      totalFocusMinutes: StatsCalculator.computeTotalMinutes(
+          workSessions.map((s) => s.durationSeconds).toList()),
       totalSessions: completedSessions.length,
-      currentStreak: StatsCalculator.computeStreakDays(completedSessions.map((s) => s.timestamp).toList()),
-      completionRate: StatsCalculator.computeCompletionRate(sessions),
-      dailyMinutes: StatsCalculator.computeDailyMinutes(workSessions),
-      categoryMinutes: StatsCalculator.computeCategoryMinutes(workSessions),
+      currentStreak: StatsCalculator.computeStreakDays(
+          completedSessions.map((s) => s.timestamp).toList()),
+      completionRate: StatsCalculator.computeCompletionRate(
+          sessions.map((s) => s.completed).toList()),
+      dailyMinutes: StatsCalculator.computeDailyMinutes(
+        workSessions.map((s) => s.durationSeconds).toList(),
+        workSessions.map((s) => s.timestamp).toList(),
+      ),
+      categoryMinutes: StatsCalculator.computeCategoryMinutes(
+        workSessions.map((s) => s.category).toList(),
+        workSessions.map((s) => s.durationSeconds).toList(),
+      ),
       recentSessions: sessions.take(10).toList(),
     );
   }
 
   String get formattedTotalFocus => formatDurationLong(totalFocusMinutes * 60);
-  
-  String get formattedStreak => '$currentStreak ${currentStreak > 1 ? 'jours' : 'jour'}';
-  
+
+  String get formattedStreak =>
+      '$currentStreak ${currentStreak > 1 ? 'jours' : 'jour'}';
+
   String get formattedCompletionRate => '${(completionRate * 100).round()}%';
 }

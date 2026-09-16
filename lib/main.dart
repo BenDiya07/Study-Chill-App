@@ -3,14 +3,12 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 
-import 'core/constants/app_constants.dart';
 import 'core/theme/app_theme.dart';
+import 'core/constants/app_constants.dart';
 import 'core/network/connectivity.dart';
-import 'features/pomodoro/pomodoro_state.dart';
+import 'features/pomodoro/pomodoro_recorder.dart';
 import 'features/pomodoro/pomodoro_screen.dart';
-import 'features/soundboard/soundboard_state.dart';
 import 'features/soundboard/soundboard_screen.dart';
 import 'features/tasks/task_model.dart';
 import 'features/tasks/tasks_screen.dart';
@@ -18,24 +16,26 @@ import 'features/analytics/analytics_state.dart';
 import 'features/analytics/analytics_screen.dart';
 import 'features/settings/settings_state.dart';
 import 'features/settings/settings_screen.dart';
-import 'l10n/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await Hive.initFlutter();
   Hive.registerAdapter(TaskAdapter());
   Hive.registerAdapter(SessionRecordAdapter());
-  
+  Hive.registerAdapter(TimerModeAdapter());
+  Hive.registerAdapter(TaskPriorityAdapter());
+
   final taskRepo = TaskRepository();
   await taskRepo.init();
-  
+
   final sessionRepo = SessionRepository();
   await sessionRepo.init();
-  
+
   final settingsRepo = SettingsRepository();
   await settingsRepo.init();
-  
+
   runApp(ProviderScope(
     overrides: [
       taskRepositoryProvider.overrideWithValue(taskRepo),
@@ -54,6 +54,7 @@ class StudyChillApp extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeModeProvider);
     final isOnline = ref.watch(isOnlineProvider);
+    ref.watch(pomodoroRecorderProvider);
 
     return MaterialApp(
       title: 'Study Chill',
@@ -91,9 +92,9 @@ class _OfflineBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final custom = theme.extension<_CustomColorsLight>() ?? theme.extension<_CustomColorsDark>()!;
+    final custom = CustomColors.of(theme);
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Semantics(
       label: l10n.offlineWarning,
       liveRegion: true,
@@ -130,7 +131,8 @@ class StudyChillHomeScreen extends ConsumerStatefulWidget {
   const StudyChillHomeScreen({super.key});
 
   @override
-  ConsumerState<StudyChillHomeScreen> createState() => _StudyChillHomeScreenState();
+  ConsumerState<StudyChillHomeScreen> createState() =>
+      _StudyChillHomeScreenState();
 }
 
 class _StudyChillHomeScreenState extends ConsumerState<StudyChillHomeScreen> {

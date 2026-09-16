@@ -1,35 +1,61 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:study_chill_app/core/network/connectivity.dart';
 import 'package:study_chill_app/main.dart';
 import 'package:study_chill_app/core/constants/app_constants.dart';
-import 'package:study_chill_app/features/pomodoro/pomodoro_state.dart';
 import 'package:study_chill_app/features/tasks/task_model.dart';
 import 'package:study_chill_app/features/analytics/analytics_state.dart';
 import 'package:study_chill_app/features/settings/settings_state.dart';
+
+List<Override> _appOverrides({
+  required TaskRepository taskRepo,
+  required SessionRepository sessionRepo,
+  required SettingsRepository settingsRepo,
+}) =>
+    [
+      taskRepositoryProvider.overrideWithValue(taskRepo),
+      sessionRepositoryProvider.overrideWithValue(sessionRepo),
+      settingsRepositoryProvider.overrideWithValue(settingsRepo),
+      connectivityProvider.overrideWith(
+          (ref) => Stream.value(<ConnectivityResult>[ConnectivityResult.wifi])),
+    ];
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    await Hive.initFlutter();
+    try {
+      await Hive.initFlutter();
+    } on Exception catch (_) {
+      Hive.init(Directory.systemTemp.path);
+    }
     Hive.registerAdapter(TaskAdapter());
     Hive.registerAdapter(SessionRecordAdapter());
+    Hive.registerAdapter(TimerModeAdapter());
+    Hive.registerAdapter(TaskPriorityAdapter());
     SharedPreferences.setMockInitialValues({});
   });
 
   group('Integration Tests - Full User Workflows', () {
-    testWidgets('Integration 1: Complete Pomodoro Session → Task Update → Analytics Update', (tester) async {
+    testWidgets(
+        'Integration 1: Complete Pomodoro Session → Task Update → Analytics Update',
+        (tester) async {
       // Setup repositories
       final taskRepo = TaskRepository();
       await taskRepo.init();
-      
+
       final sessionRepo = SessionRepository();
       await sessionRepo.init();
-      
+
       final settingsRepo = SettingsRepository();
       await settingsRepo.init();
 
@@ -37,17 +63,16 @@ void main() {
       final task = taskRepo.addTask(
         title: 'Integration Test Task',
         priority: TaskPriority.urgent,
-        targetPomodoros: 1,
       );
 
       // Build app with real providers
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            taskRepositoryProvider.overrideWithValue(taskRepo),
-            sessionRepositoryProvider.overrideWithValue(sessionRepo),
-            settingsRepositoryProvider.overrideWithValue(settingsRepo),
-          ],
+          overrides: _appOverrides(
+            taskRepo: taskRepo,
+            sessionRepo: sessionRepo,
+            settingsRepo: settingsRepo,
+          ),
           child: const StudyChillApp(),
         ),
       );
@@ -55,58 +80,62 @@ void main() {
 
       // Navigate to Pomodoro screen (already default)
       expect(find.text('Concentration'), findsOneWidget);
-      
+
       // Start timer
       await tester.tap(find.text('Démarrer'));
       await tester.pump();
       expect(find.text('Pause'), findsOneWidget);
-      
+
       // Simulate timer completion by skipping
       await tester.tap(find.text('Passer'));
+      await tester.runAsync(() async {
+        await Future<void>.delayed(const Duration(seconds: 1));
+      });
       await tester.pumpAndSettle();
-      
+
       // Should now be in short break
       expect(find.text('Pause courte'), findsOneWidget);
-      
+
       // Verify task was updated (completed 1 pomodoro)
       final updatedTasks = taskRepo.getAll();
       final updatedTask = updatedTasks.firstWhere((t) => t.id == task.id);
       expect(updatedTask.completedPomodoros, 1);
       expect(updatedTask.isCompleted, true);
-      
+
       // Verify session was recorded
       final sessions = sessionRepo.getAll();
       expect(sessions, isNotEmpty);
       final workSession = sessions.firstWhere((s) => s.mode == TimerMode.work);
       expect(workSession.taskId, task.id);
       expect(workSession.durationSeconds, kDefaultWorkDuration);
-      
+
       // Navigate to Analytics
       await tester.tap(find.byIcon(Icons.bar_chart_outlined).last);
       await tester.pumpAndSettle();
-      
+
       // Analytics should reflect the new session
       expect(find.text('Statistiques'), findsOneWidget);
     });
 
-    testWidgets('Integration 2: Offline Mode → Task Creation → Online Sync', (tester) async {
+    testWidgets('Integration 2: Offline Mode → Task Creation → Online Sync',
+        (tester) async {
       final taskRepo = TaskRepository();
       await taskRepo.init();
-      
+
       final sessionRepo = SessionRepository();
       await sessionRepo.init();
-      
+
       final settingsRepo = SettingsRepository();
       await settingsRepo.init();
 
       // Build app
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            taskRepositoryProvider.overrideWithValue(taskRepo),
-            sessionRepositoryProvider.overrideWithValue(sessionRepo),
-            settingsRepositoryProvider.overrideWithValue(settingsRepo),
-          ],
+          overrides: _appOverrides(
+            taskRepo: taskRepo,
+            sessionRepo: sessionRepo,
+            settingsRepo: settingsRepo,
+          ),
           child: const StudyChillApp(),
         ),
       );
@@ -122,7 +151,7 @@ void main() {
 
       await tester.enterText(find.byType(TextFormField), 'Offline Task');
       await tester.pump();
-      
+
       await tester.tap(find.text('Créer'));
       await tester.pumpAndSettle();
 
@@ -137,24 +166,25 @@ void main() {
       expect(persistedTasks.any((t) => t.title == 'Offline Task'), isTrue);
     });
 
-    testWidgets('Integration 3: Settings Persistence Across Restart', (tester) async {
+    testWidgets('Integration 3: Settings Persistence Across Restart',
+        (tester) async {
       final taskRepo = TaskRepository();
       await taskRepo.init();
-      
+
       final sessionRepo = SessionRepository();
       await sessionRepo.init();
-      
+
       final settingsRepo = SettingsRepository();
       await settingsRepo.init();
 
       // First app launch - change settings
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            taskRepositoryProvider.overrideWithValue(taskRepo),
-            sessionRepositoryProvider.overrideWithValue(sessionRepo),
-            settingsRepositoryProvider.overrideWithValue(settingsRepo),
-          ],
+          overrides: _appOverrides(
+            taskRepo: taskRepo,
+            sessionRepo: sessionRepo,
+            settingsRepo: settingsRepo,
+          ),
           child: const StudyChillApp(),
         ),
       );
@@ -177,13 +207,16 @@ void main() {
       await tester.pumpAndSettle();
 
       // "Restart" app - create new widget tree with same repos
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            taskRepositoryProvider.overrideWithValue(taskRepo),
-            sessionRepositoryProvider.overrideWithValue(sessionRepo),
-            settingsRepositoryProvider.overrideWithValue(settingsRepo),
-          ],
+          overrides: _appOverrides(
+            taskRepo: taskRepo,
+            sessionRepo: sessionRepo,
+            settingsRepo: settingsRepo,
+          ),
           child: const StudyChillApp(),
         ),
       );
@@ -199,26 +232,28 @@ void main() {
       final loadedSettings = settingsRepo.load();
       expect(loadedSettings.locale, const Locale('en', 'US'));
       expect(loadedSettings.themeMode, ThemeMode.dark);
-      expect(loadedSettings.workDuration, greaterThan(25)); // Changed from default
+      expect(
+          loadedSettings.workDuration, greaterThan(25)); // Changed from default
     });
 
-    testWidgets('Integration 4: Soundboard Preset → Pomodoro Session', (tester) async {
+    testWidgets('Integration 4: Soundboard Preset → Pomodoro Session',
+        (tester) async {
       final taskRepo = TaskRepository();
       await taskRepo.init();
-      
+
       final sessionRepo = SessionRepository();
       await sessionRepo.init();
-      
+
       final settingsRepo = SettingsRepository();
       await settingsRepo.init();
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            taskRepositoryProvider.overrideWithValue(taskRepo),
-            sessionRepositoryProvider.overrideWithValue(sessionRepo),
-            settingsRepositoryProvider.overrideWithValue(settingsRepo),
-          ],
+          overrides: _appOverrides(
+            taskRepo: taskRepo,
+            sessionRepo: sessionRepo,
+            settingsRepo: settingsRepo,
+          ),
           child: const StudyChillApp(),
         ),
       );
@@ -246,27 +281,34 @@ void main() {
       expect(find.text('Pause'), findsOneWidget);
     });
 
-    testWidgets('Integration 5: Full Day Workflow - Multiple Sessions → Stats', (tester) async {
+    testWidgets('Integration 5: Full Day Workflow - Multiple Sessions → Stats',
+        (tester) async {
       final taskRepo = TaskRepository();
       await taskRepo.init();
-      
+
       final sessionRepo = SessionRepository();
       await sessionRepo.init();
-      
+
       final settingsRepo = SettingsRepository();
       await settingsRepo.init();
 
       // Create multiple tasks
-      final task1 = taskRepo.addTask(title: 'Morning Study', priority: TaskPriority.urgent, targetPomodoros: 2);
-      final task2 = taskRepo.addTask(title: 'Afternoon Coding', priority: TaskPriority.medium, targetPomodoros: 3);
+      taskRepo.addTask(
+          title: 'Morning Study',
+          priority: TaskPriority.urgent,
+          targetPomodoros: 2);
+      taskRepo.addTask(
+          title: 'Afternoon Coding',
+          priority: TaskPriority.medium,
+          targetPomodoros: 3);
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            taskRepositoryProvider.overrideWithValue(taskRepo),
-            sessionRepositoryProvider.overrideWithValue(sessionRepo),
-            settingsRepositoryProvider.overrideWithValue(settingsRepo),
-          ],
+          overrides: _appOverrides(
+            taskRepo: taskRepo,
+            sessionRepo: sessionRepo,
+            settingsRepo: settingsRepo,
+          ),
           child: const StudyChillApp(),
         ),
       );
@@ -277,6 +319,9 @@ void main() {
         await tester.tap(find.text('Démarrer'));
         await tester.pump();
         await tester.tap(find.text('Passer'));
+        await tester.runAsync(() async {
+          await Future<void>.delayed(const Duration(seconds: 1));
+        });
         await tester.pumpAndSettle();
         await tester.tap(find.text('Passer')); // Skip break
         await tester.pumpAndSettle();
@@ -288,6 +333,9 @@ void main() {
       await tester.tap(find.text('Démarrer'));
       await tester.pump();
       await tester.tap(find.text('Passer'));
+      await tester.runAsync(() async {
+        await Future<void>.delayed(const Duration(seconds: 1));
+      });
       await tester.pumpAndSettle();
 
       // Check analytics

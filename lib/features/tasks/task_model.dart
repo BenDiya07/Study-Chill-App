@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
@@ -8,75 +9,82 @@ part 'task_model.g.dart';
 class Task extends HiveObject {
   @HiveField(0)
   final String id;
-  
+
   @HiveField(1)
   String title;
-  
+
   @HiveField(2)
   bool isCompleted;
-  
+
   @HiveField(3)
   int completedPomodoros;
-  
+
   @HiveField(4)
   int targetPomodoros;
-  
+
   @HiveField(5)
   TaskPriority priority;
-  
+
   @HiveField(6)
   String category;
-  
+
   @HiveField(7)
   final DateTime createdAt;
-  
+
   @HiveField(8)
   DateTime? completedAt;
 
   Task({
     required this.id,
     required this.title,
+    required this.priority,
     this.isCompleted = false,
     this.completedPomodoros = 0,
     this.targetPomodoros = 1,
-    required this.priority,
     this.category = 'Général',
     DateTime? createdAt,
     this.completedAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
-  double get progress => targetPomodoros > 0 ? completedPomodoros / targetPomodoros : 0.0;
-  
+  double get progress =>
+      targetPomodoros > 0 ? completedPomodoros / targetPomodoros : 0.0;
+
   bool get isOverTarget => completedPomodoros >= targetPomodoros;
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'title': title,
-    'isCompleted': isCompleted,
-    'completedPomodoros': completedPomodoros,
-    'targetPomodoros': targetPomodoros,
-    'priority': priority.name,
-    'category': category,
-    'createdAt': createdAt.toIso8601String(),
-    'completedAt': completedAt?.toIso8601String(),
-  };
+        'id': id,
+        'title': title,
+        'isCompleted': isCompleted,
+        'completedPomodoros': completedPomodoros,
+        'targetPomodoros': targetPomodoros,
+        'priority': priority.name,
+        'category': category,
+        'createdAt': createdAt.toIso8601String(),
+        'completedAt': completedAt?.toIso8601String(),
+      };
 
   factory Task.fromJson(Map<String, dynamic> json) => Task(
-    id: json['id'] as String,
-    title: json['title'] as String,
-    isCompleted: json['isCompleted'] as bool? ?? false,
-    completedPomodoros: json['completedPomodoros'] as int? ?? 0,
-    targetPomodoros: json['targetPomodoros'] as int? ?? 1,
-    priority: TaskPriority.values.byName(json['priority'] as String? ?? 'medium'),
-    category: json['category'] as String? ?? 'Général',
-    createdAt: DateTime.parse(json['createdAt'] as String),
-    completedAt: json['completedAt'] != null ? DateTime.parse(json['completedAt'] as String) : null,
-  );
+        id: json['id'] as String,
+        title: json['title'] as String,
+        isCompleted: json['isCompleted'] as bool? ?? false,
+        completedPomodoros: json['completedPomodoros'] as int? ?? 0,
+        targetPomodoros: json['targetPomodoros'] as int? ?? 1,
+        priority:
+            TaskPriority.values.byName(json['priority'] as String? ?? 'medium'),
+        category: json['category'] as String? ?? 'Général',
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        completedAt: json['completedAt'] != null
+            ? DateTime.parse(json['completedAt'] as String)
+            : null,
+      );
 }
 
 class TaskRepository {
   static const String boxName = kHiveBoxTasks;
   late Box<Task> _box;
+
+  @visibleForTesting
+  set box(Box<Task> box) => _box = box;
 
   Future<void> init() async {
     _box = await Hive.openBox<Task>(boxName);
@@ -86,24 +94,25 @@ class TaskRepository {
 
   List<Task> getAll({String? category, bool? completed}) {
     var tasks = _box.values.toList();
-    
+
     if (category != null) {
       tasks = tasks.where((t) => t.category == category).toList();
     }
     if (completed != null) {
       tasks = tasks.where((t) => t.isCompleted == completed).toList();
     }
-    
+
     tasks.sort((a, b) {
       if (a.isCompleted != b.isCompleted) return a.isCompleted ? 1 : -1;
       return b.createdAt.compareTo(a.createdAt);
     });
-    
+
     return tasks;
   }
 
-  Stream<List<Task>> watchAll() {
-    return _box.watch().map((_) => getAll());
+  Stream<List<Task>> watchAll() async* {
+    yield getAll();
+    yield* _box.watch().map((_) => getAll());
   }
 
   Task addTask({
@@ -128,14 +137,16 @@ class TaskRepository {
   }
 
   Future<void> toggleTask(String id) async {
-    final task = _box.values.firstWhere((t) => t.id == id, orElse: () => throw Exception('Task not found'));
+    final task = _box.values.firstWhere((t) => t.id == id,
+        orElse: () => throw Exception('Task not found'));
     task.isCompleted = !task.isCompleted;
     task.completedAt = task.isCompleted ? DateTime.now() : null;
     await task.save();
   }
 
   Future<void> incrementPomodoro(String id) async {
-    final task = _box.values.firstWhere((t) => t.id == id, orElse: () => throw Exception('Task not found'));
+    final task = _box.values.firstWhere((t) => t.id == id,
+        orElse: () => throw Exception('Task not found'));
     task.completedPomodoros++;
     if (task.completedPomodoros >= task.targetPomodoros && !task.isCompleted) {
       task.isCompleted = true;
@@ -145,7 +156,8 @@ class TaskRepository {
   }
 
   Future<void> deleteTask(String id) async {
-    final task = _box.values.firstWhere((t) => t.id == id, orElse: () => throw Exception('Task not found'));
+    final task = _box.values.firstWhere((t) => t.id == id,
+        orElse: () => throw Exception('Task not found'));
     await task.delete();
   }
 

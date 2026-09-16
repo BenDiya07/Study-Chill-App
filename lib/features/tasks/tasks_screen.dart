@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../core/constants/app_constants.dart';
-import '../core/theme/app_theme.dart';
-import '../core/utils/time_formatter.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_theme.dart';
 import 'task_model.dart';
 
 class TasksScreen extends ConsumerWidget {
@@ -14,7 +13,6 @@ class TasksScreen extends ConsumerWidget {
     final tasksAsync = ref.watch(tasksProvider);
     final categories = ref.watch(categoriesProvider);
     final selectedCategory = ref.watch(_selectedCategoryProvider);
-    final theme = Theme.of(context);
 
     return Scaffold(
       body: SafeArea(
@@ -23,13 +21,18 @@ class TasksScreen extends ConsumerWidget {
             _CategoryFilter(
               categories: categories,
               selected: selectedCategory,
-              onChanged: (cat) => ref.read(_selectedCategoryProvider.notifier).state = cat,
+              onChanged: (cat) =>
+                  ref.read(_selectedCategoryProvider.notifier).state = cat,
             ),
             const SizedBox(height: 8),
             Expanded(
               child: tasksAsync.when(
                 data: (tasks) => _TaskList(
-                  tasks: tasks.where((t) => selectedCategory == null || t.category == selectedCategory).toList(),
+                  tasks: tasks
+                      .where((t) =>
+                          selectedCategory == null ||
+                          t.category == selectedCategory)
+                      .toList(),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text('Erreur: $e')),
@@ -60,7 +63,7 @@ class _CategoryFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final allCategories = ['Tous', ...categories];
-    
+
     return Semantics(
       label: 'Filtre par catégorie',
       child: SizedBox(
@@ -72,9 +75,12 @@ class _CategoryFilter extends StatelessWidget {
           separatorBuilder: (_, __) => const SizedBox(width: 8),
           itemBuilder: (context, index) {
             final cat = allCategories[index];
-            final isSelected = selected == cat || (cat == 'Tous' && selected == null);
+            final isSelected =
+                selected == cat || (cat == 'Tous' && selected == null);
             return FilterChip(
-              label: Text(cat, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500)),
+              label: Text(cat,
+                  style:
+                      GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500)),
               selected: isSelected,
               onSelected: (_) => onChanged(cat == 'Tous' ? null : cat),
               selectedColor: Theme.of(context).colorScheme.primaryContainer,
@@ -118,7 +124,8 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.task_alt, size: 64, color: Theme.of(context).colorScheme.outline),
+          Icon(Icons.task_alt,
+              size: 64, color: Theme.of(context).colorScheme.outline),
           const SizedBox(height: 16),
           Text(
             'Aucune tâche',
@@ -150,8 +157,8 @@ class _TaskItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(taskRepositoryProvider);
     final theme = Theme.of(context);
-    final custom = theme.extension<_CustomColorsLight>() ?? theme.extension<_CustomColorsDark>()!;
-    
+    final custom = CustomColors.of(theme);
+
     final priorityColor = switch (task.priority) {
       TaskPriority.urgent => custom.taskUrgentColor,
       TaskPriority.medium => custom.taskMediumColor,
@@ -159,7 +166,8 @@ class _TaskItem extends ConsumerWidget {
     };
 
     return Semantics(
-      label: 'Tâche: ${task.title}, ${task.isCompleted ? "terminée" : "en cours"}, priorité ${task.priority.name}, ${task.completedPomodoros}/${task.targetPomodoros} pomodoros',
+      label:
+          'Tâche: ${task.title}, ${task.isCompleted ? "terminée" : "en cours"}, priorité ${task.priority.name}, ${task.completedPomodoros}/${task.targetPomodoros} pomodoros',
       child: Dismissible(
         key: Key(task.id),
         direction: DismissDirection.endToStart,
@@ -174,16 +182,24 @@ class _TaskItem extends ConsumerWidget {
         ),
         confirmDismiss: (_) async {
           return await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Supprimer la tâche', style: GoogleFonts.plusJakartaSans()),
-              content: Text('Voulez-vous vraiment supprimer "${task.title}" ?', style: GoogleFonts.plusJakartaSans()),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
-                TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Supprimer')),
-              ],
-            ),
-          ) ?? false;
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Supprimer la tâche',
+                      style: GoogleFonts.plusJakartaSans()),
+                  content: Text(
+                      'Voulez-vous vraiment supprimer "${task.title}" ?',
+                      style: GoogleFonts.plusJakartaSans()),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Annuler')),
+                    TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Supprimer')),
+                  ],
+                ),
+              ) ??
+              false;
         },
         onDismissed: (_) => repo.deleteTask(task.id),
         child: Card(
@@ -197,7 +213,8 @@ class _TaskItem extends ConsumerWidget {
                     Checkbox(
                       value: task.isCompleted,
                       onChanged: (_) => repo.toggleTask(task.id),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -209,7 +226,9 @@ class _TaskItem extends ConsumerWidget {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+                              decoration: task.isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : null,
                               color: task.isCompleted
                                   ? theme.colorScheme.onSurfaceVariant
                                   : theme.colorScheme.onSurface,
@@ -219,9 +238,10 @@ class _TaskItem extends ConsumerWidget {
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: priorityColor.withValues(alpha: 0.15),
+                                  color: priorityColor.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
@@ -235,9 +255,11 @@ class _TaskItem extends ConsumerWidget {
                               ),
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.surfaceContainerHighest,
+                                  color:
+                                      theme.colorScheme.surfaceContainerHighest,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
@@ -285,7 +307,9 @@ class _TaskItem extends ConsumerWidget {
                       Expanded(
                         child: OutlinedButton.icon(
                           icon: const Icon(Icons.add, size: 16),
-                          label: Text('+1 Pomodoro', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500)),
+                          label: Text('+1 Pomodoro',
+                              style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w500)),
                           onPressed: () => repo.incrementPomodoro(task.id),
                         ),
                       ),
@@ -313,9 +337,12 @@ class _AddTaskButton extends ConsumerWidget {
           width: double.infinity,
           child: FilledButton.icon(
             icon: const Icon(Icons.add),
-            label: Text('Nouvelle tâche', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+            label: Text('Nouvelle tâche',
+                style:
+                    GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
             onPressed: () => _showAddTaskDialog(context, ref),
-            style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+            style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16)),
           ),
         ),
       ),
@@ -331,10 +358,10 @@ class _AddTaskButton extends ConsumerWidget {
     int targetPomodoros = 1;
     String category = 'Général';
 
-    await showDialog(
+    await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Nouvelle tâche', style: GoogleFonts.plusJakartaSans()),
+        title: Text('Créer une tâche', style: GoogleFonts.plusJakartaSans()),
         content: Form(
           key: formKey,
           child: SingleChildScrollView(
@@ -342,7 +369,8 @@ class _AddTaskButton extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Titre', hintText: 'Ex: Étudier Flutter'),
+                  decoration: const InputDecoration(
+                      labelText: 'Titre', hintText: 'Ex: Étudier Flutter'),
                   validator: (v) => v?.isEmpty ?? true ? 'Titre requis' : null,
                   onChanged: (v) => title = v,
                   autofocus: true,
@@ -351,24 +379,31 @@ class _AddTaskButton extends ConsumerWidget {
                 DropdownButtonFormField<TaskPriority>(
                   value: priority,
                   decoration: const InputDecoration(labelText: 'Priorité'),
-                  items: TaskPriority.values.map((p) => DropdownMenuItem(
-                    value: p,
-                    child: Text(p.name.toUpperCase()),
-                  )).toList(),
+                  items: TaskPriority.values
+                      .map((p) => DropdownMenuItem(
+                            value: p,
+                            child: Text(p.name.toUpperCase()),
+                          ))
+                      .toList(),
                   onChanged: (v) => priority = v!,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
                   value: targetPomodoros,
-                  decoration: const InputDecoration(labelText: 'Objectif Pomodoros'),
-                  items: [1, 2, 3, 4, 5, 6, 8, 10].map((v) => DropdownMenuItem(value: v, child: Text('$v'))).toList(),
+                  decoration:
+                      const InputDecoration(labelText: 'Objectif Pomodoros'),
+                  items: [1, 2, 3, 4, 5, 6, 8, 10]
+                      .map((v) => DropdownMenuItem(value: v, child: Text('$v')))
+                      .toList(),
                   onChanged: (v) => targetPomodoros = v!,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: category,
                   decoration: const InputDecoration(labelText: 'Catégorie'),
-                  items: [...categories, 'Nouvelle...'].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                  items: <String>{'Général', ...categories, 'Nouvelle...'}
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                      .toList(),
                   onChanged: (v) => category = v!,
                 ),
               ],
@@ -376,7 +411,9 @@ class _AddTaskButton extends ConsumerWidget {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler')),
           FilledButton(
             onPressed: () {
               if (formKey.currentState!.validate()) {

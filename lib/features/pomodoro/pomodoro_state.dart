@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/time_formatter.dart';
@@ -46,7 +47,7 @@ class PomodoroState {
   }
 
   String get formattedTime => formatDuration(timeRemaining);
-  
+
   double get progress {
     final total = switch (mode) {
       TimerMode.work => workDuration,
@@ -63,24 +64,25 @@ class PomodoroNotifier extends StateNotifier<PomodoroState> {
   PomodoroNotifier() : super(const PomodoroState());
 
   void tick() {
-    if (state.timeRemaining > 0) {
-      state = state.copyWith(timeRemaining: state.timeRemaining - 1);
-    } else {
+    if (state.timeRemaining <= 1) {
       _completeSession();
+    } else {
+      state = state.copyWith(timeRemaining: state.timeRemaining - 1);
     }
   }
 
   void _completeSession() {
     _timer?.cancel();
     _timer = null;
-    
+
     if (state.mode == TimerMode.work) {
       final newCompleted = state.completedSessions + 1;
       final isLongBreak = newCompleted % kSessionsBeforeLongBreak == 0;
-      
+
       state = state.copyWith(
         mode: isLongBreak ? TimerMode.longBreak : TimerMode.shortBreak,
-        timeRemaining: isLongBreak ? state.longBreakDuration : state.shortBreakDuration,
+        timeRemaining:
+            isLongBreak ? state.longBreakDuration : state.shortBreakDuration,
         completedSessions: newCompleted,
         isRunning: false,
       );
@@ -130,7 +132,7 @@ class PomodoroNotifier extends StateNotifier<PomodoroState> {
   }) {
     final wasWork = state.mode == TimerMode.work;
     final wasShortBreak = state.mode == TimerMode.shortBreak;
-    
+
     state = state.copyWith(
       workDuration: work ?? state.workDuration,
       shortBreakDuration: shortBreak ?? state.shortBreakDuration,
@@ -150,6 +152,7 @@ class PomodoroNotifier extends StateNotifier<PomodoroState> {
   }
 }
 
-final pomodoroProvider = StateNotifierProvider<PomodoroNotifier, PomodoroState>((ref) {
+final pomodoroProvider =
+    StateNotifierProvider<PomodoroNotifier, PomodoroState>((ref) {
   return PomodoroNotifier();
 });

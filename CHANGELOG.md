@@ -6,6 +6,29 @@ et ce projet adhère à la spécification [Semantic Versioning](https://semver.o
 
 ---
 
+## [1.1.0] - 2026-09-16 (Hardening & Test Coverage)
+
+### 🐛 Corrigé
+- **Enregistrement des sessions Pomodoro** : une session de travail terminée (naturellement ou via « Passer ») est désormais enregistrée dans Hive et attribuée à la tâche cible (selectionnée ou la plus récente), avec incrément du compteur de pomodoros et auto-complétion (`lib/features/pomodoro/pomodoro_recorder.dart`).
+- **Affichage bloqué sur l'écran de chargement** : `Hive.box.watch()` n'émet aucun événement initial ; les flux `TaskRepository.watchAll()` et `SessionRepository.watchAll()` émettent désormais l'état courant avant de suivre les changements (corrige un chargement infini sur les écrans Tâches et Statistiques en production).
+- **Crash de sérialisation des énumérations Hive** : `hive_generator` 2.0.1 échoue sur les énumérations avec cet analyseur ; ajout d'adaptateurs manuels `TimerModeAdapter` (typeId 3) et `TaskPriorityAdapter` (typeId 4) enregistrés au démarrage.
+- **Minuteur Pomodoro** : transition vers la pause déclenchée lorsque le temps restant atteint zéro (`tick()` gère `timeRemaining <= 1`).
+- **Statistiques** : `computeStreakDays` retourne 0 dès qu'une journée de la chaîne est manquante.
+- **Réglages** : thème par défaut `ThemeMode.system` (au lieu de sombre).
+
+### 🧪 Suite de Tests & Qualité
+- **34 Tests Unitaires + 24 Tests de Widgets + 5 Tests d'Intégration** (100 % de réussite) — la suite est désormais la source de vérité des étiquettes UI.
+- Tests unitaires des repos utilisant de vraies boîtes Hive (les mocks ne peuvent pas stuber les objets réels).
+- Tests d'intégration exécutés sur périphérique Linux desktop sous `xvfb-run` avec les adaptateurs Hive et les repositories réels.
+- `flutter analyze --fatal-infos --fatal-warnings` : **No issues found**.
+
+### 🛠️ Infrastructure & CI/CD
+- Plateformes **Linux desktop** et **Web** générées (`flutter create --platforms=linux --platforms=web`).
+- CI : les tests d'intégration s'exécutent sur le périphérique `linux` (dépendances GTK/ninja/xvfb installées).
+- Corrections Git/CI : `.gitignore` mis à jour pour `.dart_tool/`, artefacts IDE et fichiers générés.
+
+---
+
 ## [1.0.0] - 2026-09-11 (Production Ready - 100/100 Pts)
 
 ### ✨ Fonctionnalités Ajoutées

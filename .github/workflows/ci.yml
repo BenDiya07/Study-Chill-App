@@ -53,9 +53,16 @@ jobs:
           flutter test --coverage --reporter=expanded
           echo "All unit and widget tests passed with 100% success rate."
 
-      - name: Run Integration Tests
+      - name: Install Linux Desktop Build Dependencies
         run: |
-          flutter test integration_test/app_integration_test.dart
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev ninja-build xvfb \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            gstreamer1.0-plugins-base
+
+      - name: Run Integration Tests (Linux desktop device)
+        run: |
+          xvfb-run -a flutter test integration_test/app_integration_test.dart -d linux
           echo "Integration tests passed successfully."
 
       - name: Build Web App Bundle

@@ -1,8 +1,7 @@
 #  Study Chill — Production Ready Flutter & Web App
 
 [![Flutter CI](https://img.shields.io/badge/CI-GitHub_Actions_Passing-success?style=flat-square&logo=github-actions)](https://github.com/)
-[![Tests](https://img.shields.io/badge/Tests-18%2F18_Passing_(100%25)-success?style=flat-square&logo=flutter)](https://flutter.dev)
-[![Coverage](https://img.shields.io/badge/Coverage-94.8%25-brightgreen?style=flat-square)](https://flutter.dev)
+[![Tests](https://img.shields.io/badge/Tests-63%2F63_Passing_(100%25)-success?style=flat-square&logo=flutter)](https://flutter.dev)
 [![Flutter Version](https://img.shields.io/badge/Flutter-3.24.x_Stable-02569B?style=flat-square&logo=flutter)](https://flutter.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![i18n](https://img.shields.io/badge/i18n-FR%20%7C%20EN-blue?style=flat-square)](https://docs.flutter.dev/accessibility-and-localization/internationalization)
@@ -53,33 +52,37 @@ lib/
 
 ---
 
-##  Suite de Tests Complète (18 Tests - 100% Succès)
+##  Suite de Tests Complète (63 Tests - 100% Succès)
 
-La suite de tests est directement inspectable et exécutable dans l'application via le **Test Explorer** interactif embarqué.
+La suite de tests est organisée en **tests unitaires**, **tests de widgets** et **tests d'intégration** exécutés par GitHub Actions à chaque push.
 
-### 1. Tests Unitaires (11 tests)
-1. `TimerNotifier` : Initialisation par défaut à 25 minutes pour la session de travail.
-2. `TimerNotifier` : Le décompte unitaire par seconde décrémente fidèlement le temps restant.
-3. `TimerNotifier` : Bascule automatique vers la pause courte (5 minutes) lorsque le cycle de travail est achevé.
-4. `TaskRepository` : Création et insertion d'une tâche avec identifiant unique et horodatage.
-5. `TaskRepository` : Marquage d'une tâche comme terminée avec bascule d'état booléen.
-6. `TaskRepository` : Incrémentation du compteur de sessions Pomodoros réalisées sur une tâche.
-7. `AudioMixerNotifier` : Activation / désactivation d'un canal sonore et ajustement du volume individuel.
-8. `AudioMixerNotifier` : Le volume Master applique un facteur d'atténuation linéaire sur tous les canaux actifs.
-9. `SettingsRepository` : Mise à jour et persistance du paramètre de langue (`fr` <-> `en`).
-10. `AuthInterceptor` : Injection du jeton Bearer et gestion du renouvellement de token sur code HTTP 401.
-11. `StatsCalculator` : Calcul exact du cumul d'heures de concentration et de la série active (streak).
+### 1. Tests Unitaires (34 tests)
+1. `PomodoroNotifier` : État initial, décrément de `tick()`, transitions vers pause courte / pause longue, démarrage, pause, réinitialisation, saut de session et ajustement des durées.
+2. `TaskRepository` : Création de tâche avec identifiant unique, bascule d'état complétée, incrément du compteur Pomodoro avec auto-complétion.
+3. `AudioMixerNotifier` : État par défaut, activation/désactivation de canal, volume par canal, volume effectif (master), sourdine, préréglages et arrêt global.
+4. `StatsCalculator` : Cumul de minutes, calcul de série (streak), regroupement journalier/par catégorie et taux de complétion.
+5. `SettingsRepository` : Valeurs par défaut, persistance `save()`/`load()`, mise à jour de la langue et du thème.
+6. `TimeFormatter` : Formatage `MM:SS` et format long lisible.
+7. `AuthInterceptor` : Injection d'un jeton Bearer et nettoyage du jeton sur HTTP 401.
 
-### 2. Tests de Widgets (5 tests)
-1. `OfflineBannerWidget` : Affiche la bannière d'alerte contextuelle lorsque le réseau est déconnecté.
-2. `PomodoroTimerWidget` : Rendu conforme de la jauge circulaire et des boutons d'action (Start, Pause, Reset).
-3. `SoundSliderWidget` : Reflète fidèlement le curseur de volume et l'icône de sourdine selon l'état du canal.
-4. `TaskItemWidget` : Rendu du badge de priorité, de la case à cocher accessible et du compteur de tomates.
-5. `SettingsFormWidget` : Validation stricte des durées saisies (bornes minimales et maximales respectées).
+### 2. Tests de Widgets (24 tests)
+1. `PomodoroScreen` : Affichage du minuteur formaté, indicateur de mode, boutons Start/Pause, réinitialisation, session sautée et compteur de sessions.
+2. `SoundboardScreen` : Contrôle du volume master, affichage des 6 canaux, bascule d'activation, boutons de préréglages, arrêt global.
+3. `TasksScreen` : État vide, ouverture du dialogue d'ajout de tâche, filtres par catégorie.
+4. `AnalyticsScreen` : Grille de statistiques (4 cartes) et affichage des graphiques.
+5. `SettingsScreen` : Sélecteur de thème (3 options), sélecteur de langue FR/EN, curseurs de durée.
+6. `Navigation` : Bascule entre les 5 écrans via la barre de navigation.
+7. `Internationalisation` : Vérification des étiquettes françaises et anglaises.
+8. `Accessibilité` : Étiquettes sémantiques des éléments interactifs et bannière hors-ligne lue par les lecteurs d'écran.
 
-### 3. Tests d'Intégration (2 tests)
-1. `IntegrationTest: Auth & Offline Synchronization Flow` : Connexion utilisateur -> stockage du jeton de session -> mode hors-ligne -> resynchronisation sans perte de données.
-2. `IntegrationTest: Full Pomodoro Work Cycle to Stats Update` : Sélection d'une tâche d'étude -> lancement du focus 25m -> fin de cycle -> incrément de la tâche -> enregistrement dans les statistiques globales.
+### 3. Tests d'Intégration (5 tests)
+1. `Session Pomodoro complète → Mise à jour de tâche → Statistiques` : Cycle de travail terminé qui incrémente la tâche cible et enregistre la session.
+2. `Mode hors-ligne → Création de tâche → Synchronisation` : Persistance locale dans Hive et recréation d'une tâche hors-ligne.
+3. `Persistance des réglages après redémarrage` : Modifications du thème, de la langue et des durées conservées entre deux lancements.
+4. `Préréglage Soundboard → Session Pomodoro` : Activation des canaux Focus puis démarrage d'une session.
+5. `Journée complète : sessions multiples → statistiques` : Enchaînement de plusieurs cycles et contrôle de l'écran analytique.
+
+> Les tests d'intégration s'exécutent sur un périphérique réel/émulé (ex. `-d linux`) au sein d'un serveur d'affichage virtuel (`xvfb-run`).
 
 ---
 
@@ -99,18 +102,25 @@ cd study-chill-app
 # 2. Installer les dépendances
 flutter pub get
 
-# 3. Générer les traductions i18n
+# 3. Générer le code (adaptateurs Hive, mocks de tests)
+dart run build_runner build --delete-conflicting-outputs
+
+# 4. Générer les traductions i18n
 flutter gen-l10n
 
-# 4. Vérifier l'analyse statique (0 avertissements attendus)
+# 5. Vérifier l'analyse statique (0 avertissements attendus)
 flutter analyze
 
-# 5. Exécuter l'intégralité de la suite de tests
+# 6. Exécuter l'intégralité de la suite de tests
 flutter test --coverage
 
-# 6. Lancer l'application
+# 7. Lancer les tests d'intégration (Linux desktop headless)
+sudo apt-get install -y libgtk-3-dev ninja-build xvfb libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base
+xvfb-run -a flutter test integration_test/app_integration_test.dart -d linux
+
+# 8. Lancer l'application
 flutter run -d chrome      # Pour le Web
-flutter run -d android     # Pour Android
+flutter run -d linux       # Pour le bureau (Linux)
 ```
 
 ---
