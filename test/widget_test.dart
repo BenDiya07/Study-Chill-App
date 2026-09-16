@@ -4,20 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
+import 'widget_test.mocks.dart';
 
-import 'lib/main.dart';
-import 'lib/core/constants/app_constants.dart';
-import 'lib/features/pomodoro/pomodoro_screen.dart';
-import 'lib/features/pomodoro/pomodoro_state.dart';
-import 'lib/features/soundboard/soundboard_screen.dart';
-import 'lib/features/soundboard/soundboard_state.dart';
-import 'lib/features/tasks/tasks_screen.dart';
-import 'lib/features/tasks/task_model.dart';
-import 'lib/features/analytics/analytics_screen.dart';
-import 'lib/features/analytics/analytics_state.dart';
-import 'lib/features/settings/settings_screen.dart';
-import 'lib/features/settings/settings_state.dart';
-import 'lib/l10n/app_localizations.dart';
+import 'package:study_chill_app/main.dart';
+import 'package:study_chill_app/core/constants/app_constants.dart';
+import 'package:study_chill_app/features/pomodoro/pomodoro_screen.dart';
+import 'package:study_chill_app/features/pomodoro/pomodoro_state.dart';
+import 'package:study_chill_app/features/soundboard/soundboard_screen.dart';
+import 'package:study_chill_app/features/soundboard/soundboard_state.dart';
+import 'package:study_chill_app/features/tasks/tasks_screen.dart';
+import 'package:study_chill_app/features/tasks/task_model.dart';
+import 'package:study_chill_app/features/analytics/analytics_screen.dart';
+import 'package:study_chill_app/features/analytics/analytics_state.dart';
+import 'package:study_chill_app/features/settings/settings_screen.dart';
+import 'package:study_chill_app/features/settings/settings_state.dart';
+import 'package:study_chill_app/l10n/app_localizations.dart';
 
 @GenerateMocks([TaskRepository, SessionRepository, SettingsRepository])
 void main() {

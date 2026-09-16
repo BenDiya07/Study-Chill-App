@@ -3,15 +3,16 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'unit_test.mocks.dart';
 
-import 'lib/core/constants/app_constants.dart';
-import 'lib/core/utils/stats_calculator.dart';
-import 'lib/core/utils/time_formatter.dart';
-import 'lib/features/pomodoro/pomodoro_state.dart';
-import 'lib/features/soundboard/soundboard_state.dart';
-import 'lib/features/tasks/task_model.dart';
-import 'lib/features/analytics/analytics_state.dart';
-import 'lib/features/settings/settings_state.dart';
+import 'package:study_chill_app/core/constants/app_constants.dart';
+import 'package:study_chill_app/core/utils/stats_calculator.dart';
+import 'package:study_chill_app/core/utils/time_formatter.dart';
+import 'package:study_chill_app/features/pomodoro/pomodoro_state.dart';
+import 'package:study_chill_app/features/soundboard/soundboard_state.dart';
+import 'package:study_chill_app/features/tasks/task_model.dart';
+import 'package:study_chill_app/features/analytics/analytics_state.dart';
+import 'package:study_chill_app/features/settings/settings_state.dart';
 
 @GenerateMocks([Box])
 void main() {

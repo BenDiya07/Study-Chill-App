@@ -36,6 +36,9 @@ jobs:
       - name: Install Project Dependencies
         run: flutter pub get
 
+      - name: Generate Dart and Flutter Code
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Generate Localizations
         run: flutter gen-l10n
 
@@ -58,7 +61,8 @@ jobs:
       - name: Build Web App Bundle
         run: flutter build web --release --pwa-strategy=offline-first
 
-      - name: Build Android Release APK
+      - name: Build Android Release APK (when Android platform is present)
+        if: hashFiles('android/**') != ''
         run: flutter build apk --release --split-per-abi
 
       - name: Upload Test Coverage Artifacts
