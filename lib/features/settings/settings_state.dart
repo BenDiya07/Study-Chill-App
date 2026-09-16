@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_constants.dart';
@@ -54,13 +55,17 @@ class SettingsRepository {
 
   SettingsState load() {
     final localeCode = _prefs.getString(_keyLocale) ?? 'fr';
-    final themeModeIndex = _prefs.getInt(_keyThemeMode) ?? 2;
+    final themeModeIndex =
+        _prefs.getInt(_keyThemeMode) ?? ThemeMode.system.index;
     return SettingsState(
       locale: Locale(localeCode, localeCode == 'fr' ? 'FR' : 'US'),
       themeMode: ThemeMode.values[themeModeIndex],
-      workDuration: _prefs.getInt(_keyWorkDuration) ?? (kDefaultWorkDuration ~/ 60),
-      shortBreakDuration: _prefs.getInt(_keyShortBreakDuration) ?? (kDefaultShortBreakDuration ~/ 60),
-      longBreakDuration: _prefs.getInt(_keyLongBreakDuration) ?? (kDefaultLongBreakDuration ~/ 60),
+      workDuration:
+          _prefs.getInt(_keyWorkDuration) ?? (kDefaultWorkDuration ~/ 60),
+      shortBreakDuration: _prefs.getInt(_keyShortBreakDuration) ??
+          (kDefaultShortBreakDuration ~/ 60),
+      longBreakDuration: _prefs.getInt(_keyLongBreakDuration) ??
+          (kDefaultLongBreakDuration ~/ 60),
       masterVolume: _prefs.getDouble(_keyMasterVolume) ?? 0.8,
     );
   }
@@ -91,7 +96,8 @@ class SettingsRepository {
   }
 }
 
-final settingsRepositoryProvider = Provider<SettingsRepository>((ref) => SettingsRepository());
+final settingsRepositoryProvider =
+    Provider<SettingsRepository>((ref) => SettingsRepository());
 
 final settingsProvider = FutureProvider<SettingsState>((ref) async {
   final repo = ref.watch(settingsRepositoryProvider);
@@ -101,16 +107,16 @@ final settingsProvider = FutureProvider<SettingsState>((ref) async {
 
 final localeProvider = Provider<Locale>((ref) {
   return ref.watch(settingsProvider).when(
-    data: (s) => s.locale,
-    loading: () => const Locale('fr', 'FR'),
-    error: (_, __) => const Locale('fr', 'FR'),
-  );
+        data: (s) => s.locale,
+        loading: () => const Locale('fr', 'FR'),
+        error: (_, __) => const Locale('fr', 'FR'),
+      );
 });
 
 final themeModeProvider = Provider<ThemeMode>((ref) {
   return ref.watch(settingsProvider).when(
-    data: (s) => s.themeMode,
-    loading: () => ThemeMode.system,
-    error: (_, __) => ThemeMode.system,
-  );
+        data: (s) => s.themeMode,
+        loading: () => ThemeMode.system,
+        error: (_, __) => ThemeMode.system,
+      );
 });

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../core/constants/app_constants.dart';
-import '../core/theme/app_theme.dart';
-import '../core/utils/time_formatter.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_theme.dart';
 import 'pomodoro_state.dart';
 
 class PomodoroScreen extends HookConsumerWidget {
@@ -15,8 +14,8 @@ class PomodoroScreen extends HookConsumerWidget {
     final state = ref.watch(pomodoroProvider);
     final notifier = ref.read(pomodoroProvider.notifier);
     final theme = Theme.of(context);
-    final custom = theme.extension<_CustomColorsLight>() ?? theme.extension<_CustomColorsDark>()!;
-    
+    final custom = CustomColors.of(theme);
+
     final progressAnimation = useAnimationController(
       duration: const Duration(milliseconds: 500),
       initialValue: 1.0 - state.progress,
@@ -147,7 +146,9 @@ class _ActiveTaskChip extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.task_alt, size: 16, color: Theme.of(context).colorScheme.onPrimaryContainer),
+            Icon(Icons.task_alt,
+                size: 16,
+                color: Theme.of(context).colorScheme.onPrimaryContainer),
             const SizedBox(width: 6),
             Text(
               taskId,
@@ -186,7 +187,7 @@ class _TimerControls extends StatelessWidget {
       children: [
         _ControlButton(
           icon: Icons.refresh,
-          label: 'Reset',
+          label: 'Réinitialiser',
           onPressed: onReset,
           semanticLabel: 'Réinitialiser le minuteur',
         ),
@@ -221,8 +222,8 @@ class _ControlButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onPressed,
-    this.isPrimary = false,
     required this.semanticLabel,
+    this.isPrimary = false,
   });
 
   @override
@@ -233,11 +234,15 @@ class _ControlButton extends StatelessWidget {
       child: FilledButton.icon(
         onPressed: onPressed,
         icon: Icon(icon, size: 20),
-        label: Text(label, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+        label: Text(label,
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
         style: FilledButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          backgroundColor: isPrimary ? null : Theme.of(context).colorScheme.surfaceContainerHighest,
-          foregroundColor: isPrimary ? null : Theme.of(context).colorScheme.onSurfaceVariant,
+          backgroundColor: isPrimary
+              ? null
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
+          foregroundColor:
+              isPrimary ? null : Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     );
@@ -264,7 +269,7 @@ class _SessionCounter extends StatelessWidget {
               size: 12,
               color: i < count
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                  : Theme.of(context).colorScheme.outline.withOpacity(0.3),
             ),
           ),
         ),
@@ -288,13 +293,13 @@ class _CircularProgressPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - strokeWidth) / 2;
-    
+
     final bgPaint = Paint()
-      ..color = color.withValues(alpha: 0.1)
+      ..color = color.withOpacity(0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
-    
+
     final fgPaint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
@@ -302,7 +307,7 @@ class _CircularProgressPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     canvas.drawCircle(center, radius, bgPaint);
-    
+
     final sweepAngle = 2 * 3.14159 * progress;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
@@ -315,6 +320,8 @@ class _CircularProgressPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CircularProgressPainter old) {
-    return old.progress != progress || old.color != color || old.strokeWidth != strokeWidth;
+    return old.progress != progress ||
+        old.color != color ||
+        old.strokeWidth != strokeWidth;
   }
 }

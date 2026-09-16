@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
@@ -16,27 +15,26 @@ final isOnlineProvider = Provider<bool>((ref) {
 });
 
 class AuthInterceptor {
-  String? _token;
+  String? token;
 
-  String? get token => _token;
-
-  void setToken(String? token) => _token = token;
+  AuthInterceptor({this.token});
 
   Map<String, String> intercept(Map<String, String> headers) {
     final updated = Map<String, String>.from(headers);
-    if (_token != null && _token!.isNotEmpty) {
-      updated['Authorization'] = 'Bearer $_token';
+    if (token != null && token!.isNotEmpty) {
+      updated['Authorization'] = 'Bearer $token';
     }
     return updated;
   }
 
   bool handleResponse(int statusCode) {
     if (statusCode == 401) {
-      _token = null;
+      token = null;
       return false;
     }
     return true;
   }
 }
 
-final authInterceptorProvider = Provider<AuthInterceptor>((ref) => AuthInterceptor());
+final authInterceptorProvider =
+    Provider<AuthInterceptor>((ref) => AuthInterceptor());

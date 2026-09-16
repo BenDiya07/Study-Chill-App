@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../core/constants/app_constants.dart';
-import '../core/theme/app_theme.dart';
+import '../../core/constants/app_constants.dart';
 import 'soundboard_state.dart';
 
 class SoundboardScreen extends ConsumerWidget {
@@ -12,7 +11,6 @@ class SoundboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(audioMixerProvider);
     final notifier = ref.read(audioMixerProvider.notifier);
-    final theme = Theme.of(context);
 
     return Scaffold(
       body: SafeArea(
@@ -28,20 +26,32 @@ class SoundboardScreen extends ConsumerWidget {
             _PresetButtons(onPresetSelected: notifier.loadPreset),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                itemCount: kAudioChannels.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final channelId = kAudioChannels[index];
-                  final channel = state.channels[channelId]!;
-                  return _ChannelSlider(
-                    channel: channel,
-                    effectiveVolume: state.getEffectiveVolume(channelId),
-                    onToggle: () => notifier.toggleChannel(channelId),
-                    onVolumeChanged: (v) => notifier.setChannelVolume(channelId, v),
-                  );
-                },
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Column(
+                  children: [
+                    for (var index = 0;
+                        index < kAudioChannels.length;
+                        index++) ...[
+                      if (index > 0) const SizedBox(height: 12),
+                      Builder(
+                        builder: (context) {
+                          final channelId = kAudioChannels[index];
+                          final channel = state.channels[channelId]!;
+                          return _ChannelSlider(
+                            channel: channel,
+                            effectiveVolume:
+                                state.getEffectiveVolume(channelId),
+                            onToggle: () => notifier.toggleChannel(channelId),
+                            onVolumeChanged: (v) =>
+                                notifier.setChannelVolume(channelId, v),
+                          );
+                        },
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -70,7 +80,9 @@ class _MasterVolumeControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: isMuted ? 'Volume général muet' : 'Volume général: ${(volume * 100).round()}%',
+      label: isMuted
+          ? 'Volume général muet'
+          : 'Volume général: ${(volume * 100).round()}%',
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -86,8 +98,6 @@ class _MasterVolumeControl extends StatelessWidget {
                 child: Slider(
                   value: volume,
                   onChanged: onVolumeChanged,
-                  min: 0,
-                  max: 1,
                   divisions: 20,
                   label: '${(volume * 100).round()}%',
                 ),
@@ -135,10 +145,13 @@ class _PresetButtons extends StatelessWidget {
             button: true,
             child: OutlinedButton.icon(
               icon: Icon(icon, size: 18),
-              label: Text(label, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500)),
+              label: Text(label,
+                  style:
+                      GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500)),
               onPressed: () => onPresetSelected(preset),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               ),
             ),
           );
@@ -176,9 +189,10 @@ class _ChannelSlider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Semantics(
-      label: '${channel.label}, ${channel.isPlaying ? "actif" : "inactif"}, volume ${(effectiveVolume * 100).round()}%',
+      label:
+          '${channel.label}, ${channel.isPlaying ? "actif" : "inactif"}, volume ${(effectiveVolume * 100).round()}%',
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -187,7 +201,8 @@ class _ChannelSlider extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(_getIcon(channel.iconName), color: theme.colorScheme.primary),
+                  Icon(_getIcon(channel.iconName),
+                      color: theme.colorScheme.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -200,8 +215,11 @@ class _ChannelSlider extends StatelessWidget {
                   ),
                   IconButton(
                     icon: Icon(
-                      channel.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-                      color: channel.isPlaying ? theme.colorScheme.primary : null,
+                      channel.isPlaying
+                          ? Icons.pause_circle_filled
+                          : Icons.play_circle_filled,
+                      color:
+                          channel.isPlaying ? theme.colorScheme.primary : null,
                     ),
                     onPressed: onToggle,
                     tooltip: channel.isPlaying ? 'Pause' : 'Lecture',
@@ -221,8 +239,6 @@ class _ChannelSlider extends StatelessWidget {
                     child: Slider(
                       value: channel.volume,
                       onChanged: onVolumeChanged,
-                      min: 0,
-                      max: 1,
                       divisions: 20,
                       activeColor: theme.colorScheme.primary,
                     ),

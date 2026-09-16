@@ -46,7 +46,7 @@ class AudioMixerState {
 
   double getEffectiveVolume(String channelId) {
     final ch = channels[channelId];
-    if (ch == null || !ch.isPlaying || isMasterMuted) return 0.0;
+    if (ch == null || !ch.isPlaying || isMasterMuted) return 0;
     return ch.volume * masterVolume;
   }
 
@@ -110,7 +110,7 @@ class AudioMixerNotifier extends StateNotifier<AudioMixerState> {
   void toggleChannel(String id) {
     final channel = state.channels[id];
     if (channel == null) return;
-    
+
     state = state.copyWith(
       channels: {
         ...state.channels,
@@ -122,7 +122,7 @@ class AudioMixerNotifier extends StateNotifier<AudioMixerState> {
   void setChannelVolume(String id, double volume) {
     final channel = state.channels[id];
     if (channel == null) return;
-    
+
     state = state.copyWith(
       channels: {
         ...state.channels,
@@ -149,44 +149,24 @@ class AudioMixerNotifier extends StateNotifier<AudioMixerState> {
 
   void loadPreset(String preset) {
     final updated = <String, AudioChannel>{};
-    switch (preset) {
-      case 'focus':
-        for (final entry in state.channels.entries) {
-          if (entry.key == kAudioWhiteNoise || entry.key == kAudioRain) {
-            updated[entry.key] = entry.value.copyWith(isPlaying: true, volume: 0.4);
-          } else {
-            updated[entry.key] = entry.value.copyWith(isPlaying: false);
-          }
-        }
-        break;
-      case 'relax':
-        for (final entry in state.channels.entries) {
-          if (entry.key == kAudioForest || entry.key == kAudioOcean) {
-            updated[entry.key] = entry.value.copyWith(isPlaying: true, volume: 0.5);
-          } else {
-            updated[entry.key] = entry.value.copyWith(isPlaying: false);
-          }
-        }
-        break;
-      case 'cozy':
-        for (final entry in state.channels.entries) {
-          if (entry.key == kAudioCoffee || entry.key == kAudioCampfire) {
-            updated[entry.key] = entry.value.copyWith(isPlaying: true, volume: 0.5);
-          } else {
-            updated[entry.key] = entry.value.copyWith(isPlaying: false);
-          }
-        }
-        break;
-      default:
-        for (final entry in state.channels.entries) {
-          updated[entry.key] = entry.value.copyWith(isPlaying: false);
-        }
+    for (final entry in state.channels.entries) {
+      final enabled = switch (preset) {
+        'focus' => entry.key == kAudioWhiteNoise || entry.key == kAudioRain,
+        'relax' => entry.key == kAudioForest || entry.key == kAudioOcean,
+        'cozy' => entry.key == kAudioCoffee || entry.key == kAudioCampfire,
+        _ => false,
+      };
+      updated[entry.key] = entry.value.copyWith(
+        isPlaying: enabled,
+        volume: enabled ? (preset == 'focus' ? 0.4 : 0.5) : null,
+      );
     }
     state = state.copyWith(channels: updated);
   }
 }
 
-final audioMixerProvider = StateNotifierProvider<AudioMixerNotifier, AudioMixerState>((ref) {
+final audioMixerProvider =
+    StateNotifierProvider<AudioMixerNotifier, AudioMixerState>((ref) {
   return AudioMixerNotifier();
 });
 
@@ -198,9 +178,9 @@ final masterMutedProvider = Provider<bool>((ref) {
   return ref.watch(audioMixerProvider.select((s) => s.isMasterMuted));
 });
 
-final channelProviders = <String, Provider<AudioChannel>>{};
-for (final id in kAudioChannels) {
-  channelProviders[id] = Provider<AudioChannel>((ref) {
-    return ref.watch(audioMixerProvider.select((s) => s.channels[id]!));
-  });
-}
+final channelProviders = <String, Provider<AudioChannel>>{
+  for (final id in kAudioChannels)
+    id: Provider<AudioChannel>((ref) {
+      return ref.watch(audioMixerProvider.select((s) => s.channels[id]!));
+    }),
+};

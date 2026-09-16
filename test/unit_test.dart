@@ -1,11 +1,14 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'unit_test.mocks.dart';
 
 import 'package:study_chill_app/core/constants/app_constants.dart';
+import 'package:study_chill_app/core/network/connectivity.dart';
 import 'package:study_chill_app/core/utils/stats_calculator.dart';
 import 'package:study_chill_app/core/utils/time_formatter.dart';
 import 'package:study_chill_app/features/pomodoro/pomodoro_state.dart';
@@ -18,9 +21,11 @@ import 'package:study_chill_app/features/settings/settings_state.dart';
 void main() {
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
-    await Hive.initFlutter();
+    Hive.init(Directory.systemTemp.path);
     Hive.registerAdapter(TaskAdapter());
     Hive.registerAdapter(SessionRecordAdapter());
+    Hive.registerAdapter(TimerModeAdapter());
+    Hive.registerAdapter(TaskPriorityAdapter());
   });
 
   group('Unit Tests - Business Logic', () {
@@ -50,11 +55,7 @@ void main() {
 
       test('3. Transitions to shortBreak when work timer reaches zero', () {
         notifier = PomodoroNotifier();
-        notifier.state = PomodoroState(
-          timeRemaining: 1,
-          mode: TimerMode.work,
-          workDuration: kDefaultWorkDuration,
-        );
+        notifier.state = const PomodoroState(timeRemaining: 1);
         notifier.tick();
         expect(notifier.state.mode, TimerMode.shortBreak);
         expect(notifier.state.timeRemaining, kDefaultShortBreakDuration);
@@ -63,10 +64,8 @@ void main() {
 
       test('4. Transitions to longBreak after 4 sessions', () {
         notifier = PomodoroNotifier();
-        notifier.state = PomodoroState(
+        notifier.state = const PomodoroState(
           timeRemaining: 1,
-          mode: TimerMode.work,
-          workDuration: kDefaultWorkDuration,
           completedSessions: 3,
         );
         notifier.tick();
@@ -97,10 +96,7 @@ void main() {
       });
 
       test('8. skip() transitions to next mode immediately', () {
-        notifier.state = PomodoroState(
-          timeRemaining: 1000,
-          mode: TimerMode.work,
-        );
+        notifier.state = const PomodoroState(timeRemaining: 1000);
         notifier.skip();
         expect(notifier.state.mode, TimerMode.shortBreak);
         expect(notifier.state.completedSessions, 1);
@@ -115,19 +111,23 @@ void main() {
 
     group('TaskRepository', () {
       late TaskRepository repo;
-      late Box<Task> mockBox;
+      late MockBox<Task> mockBox;
 
       setUp(() async {
         mockBox = MockBox();
         repo = TaskRepository();
-        repo._box = mockBox;
+        repo.box = mockBox;
       });
 
       test('10. addTask creates task with unique id and priority', () {
-        when(mockBox.add(any)).thenAnswer((_) async {});
-        
-        final task = repo.addTask('Test Task', TaskPriority.urgent, targetPomodoros: 2, category: 'Work');
-        
+        when(mockBox.add(any)).thenAnswer((_) async => 0);
+
+        final task = repo.addTask(
+            title: 'Test Task',
+            priority: TaskPriority.urgent,
+            targetPomodoros: 2,
+            category: 'Work');
+
         expect(task.title, 'Test Task');
         expect(task.priority, TaskPriority.urgent);
         expect(task.targetPomodoros, 2);
@@ -136,40 +136,47 @@ void main() {
         verify(mockBox.add(any)).called(1);
       });
 
-      test('11. toggleTask flips completion state', () {
+      test('11. toggleTask flips completion state', () async {
+        final box = await Hive.openBox<Task>('test_tasks_11');
+        await box.clear();
         final task = Task(
           id: 'task_1',
           title: 'Test',
           priority: TaskPriority.medium,
         );
-        when(mockBox.values).thenReturn([task]);
-        when(task.save()).thenAnswer((_) async {});
-        
-        repo.toggleTask('task_1');
-        
+        box.add(task);
+        repo.box = box;
+
+        await repo.toggleTask('task_1');
+
         expect(task.isCompleted, true);
         expect(task.completedAt, isNotNull);
-        verify(task.save()).called(1);
+        expect(box.values.single.isCompleted, true);
+        await box.close();
       });
 
-      test('12. incrementPomodoro increases count and auto-completes at target', () {
+      test('12. incrementPomodoro increases count and auto-completes at target',
+          () async {
+        final box = await Hive.openBox<Task>('test_tasks_12');
+        await box.clear();
         final task = Task(
           id: 'task_2',
           title: 'Test',
           priority: TaskPriority.medium,
           targetPomodoros: 2,
         );
-        when(mockBox.values).thenReturn([task]);
-        when(task.save()).thenAnswer((_) async {});
-        
-        repo.incrementPomodoro('task_2');
+        box.add(task);
+        repo.box = box;
+
+        await repo.incrementPomodoro('task_2');
         expect(task.completedPomodoros, 1);
         expect(task.isCompleted, false);
-        
-        repo.incrementPomodoro('task_2');
+
+        await repo.incrementPomodoro('task_2');
         expect(task.completedPomodoros, 2);
         expect(task.isCompleted, true);
         expect(task.completedAt, isNotNull);
+        await box.close();
       });
     });
 
@@ -208,7 +215,8 @@ void main() {
         notifier.toggleChannel(kAudioRain);
         notifier.setChannelVolume(kAudioRain, 0.5);
         notifier.setMasterVolume(0.8);
-        expect(notifier.state.getEffectiveVolume(kAudioRain), closeTo(0.4, 0.001));
+        expect(
+            notifier.state.getEffectiveVolume(kAudioRain), closeTo(0.4, 0.001));
       });
 
       test('17. Master mute returns 0 effective volume', () {
@@ -264,44 +272,106 @@ void main() {
       test('23. computeDailyMinutes groups by day', () {
         final today = DateTime.now();
         final sessions = [
-          SessionRecord(id: '1', taskId: 't1', category: 'Work', durationSeconds: 1500, mode: TimerMode.work, timestamp: today),
-          SessionRecord(id: '2', taskId: 't1', category: 'Work', durationSeconds: 1500, mode: TimerMode.work, timestamp: today),
-          SessionRecord(id: '3', taskId: 't2', category: 'Study', durationSeconds: 1800, mode: TimerMode.work, timestamp: today.subtract(const Duration(days: 1))),
+          SessionRecord(
+              id: '1',
+              taskId: 't1',
+              category: 'Work',
+              durationSeconds: 1500,
+              mode: TimerMode.work,
+              timestamp: today),
+          SessionRecord(
+              id: '2',
+              taskId: 't1',
+              category: 'Work',
+              durationSeconds: 1500,
+              mode: TimerMode.work,
+              timestamp: today),
+          SessionRecord(
+              id: '3',
+              taskId: 't2',
+              category: 'Study',
+              durationSeconds: 1800,
+              mode: TimerMode.work,
+              timestamp: today.subtract(const Duration(days: 1))),
         ];
-        final daily = StatsCalculator.computeDailyMinutes(sessions);
+        final daily = StatsCalculator.computeDailyMinutes(
+          sessions.map((s) => s.durationSeconds).toList(),
+          sessions.map((s) => s.timestamp).toList(),
+        );
         expect(daily[startOfDay(today)]!, 3000);
-        expect(daily[startOfDay(today.subtract(const Duration(days: 1)))]!, 1800);
+        expect(
+            daily[startOfDay(today.subtract(const Duration(days: 1)))]!, 1800);
       });
 
       test('24. computeCategoryMinutes groups by category', () {
         final sessions = [
-          SessionRecord(id: '1', taskId: 't1', category: 'Work', durationSeconds: 1500, mode: TimerMode.work, timestamp: DateTime.now()),
-          SessionRecord(id: '2', taskId: 't2', category: 'Study', durationSeconds: 1800, mode: TimerMode.work, timestamp: DateTime.now()),
-          SessionRecord(id: '3', taskId: 't3', category: 'Work', durationSeconds: 1500, mode: TimerMode.work, timestamp: DateTime.now()),
+          SessionRecord(
+              id: '1',
+              taskId: 't1',
+              category: 'Work',
+              durationSeconds: 1500,
+              mode: TimerMode.work,
+              timestamp: DateTime.now()),
+          SessionRecord(
+              id: '2',
+              taskId: 't2',
+              category: 'Study',
+              durationSeconds: 1800,
+              mode: TimerMode.work,
+              timestamp: DateTime.now()),
+          SessionRecord(
+              id: '3',
+              taskId: 't3',
+              category: 'Work',
+              durationSeconds: 1500,
+              mode: TimerMode.work,
+              timestamp: DateTime.now()),
         ];
-        final cats = StatsCalculator.computeCategoryMinutes(sessions);
+        final cats = StatsCalculator.computeCategoryMinutes(
+          sessions.map((s) => s.category).toList(),
+          sessions.map((s) => s.durationSeconds).toList(),
+        );
         expect(cats['Work'], 3000);
         expect(cats['Study'], 1800);
       });
 
       test('25. computeCompletionRate calculates ratio', () {
         final sessions = [
-          SessionRecord(id: '1', taskId: 't1', category: 'Work', durationSeconds: 1500, mode: TimerMode.work, timestamp: DateTime.now(), completed: true),
-          SessionRecord(id: '2', taskId: 't2', category: 'Work', durationSeconds: 1500, mode: TimerMode.work, timestamp: DateTime.now(), completed: true),
-          SessionRecord(id: '3', taskId: 't3', category: 'Work', durationSeconds: 1500, mode: TimerMode.work, timestamp: DateTime.now(), completed: false),
+          SessionRecord(
+              id: '1',
+              taskId: 't1',
+              category: 'Work',
+              durationSeconds: 1500,
+              mode: TimerMode.work,
+              timestamp: DateTime.now()),
+          SessionRecord(
+              id: '2',
+              taskId: 't2',
+              category: 'Work',
+              durationSeconds: 1500,
+              mode: TimerMode.work,
+              timestamp: DateTime.now()),
+          SessionRecord(
+              id: '3',
+              taskId: 't3',
+              category: 'Work',
+              durationSeconds: 1500,
+              mode: TimerMode.work,
+              timestamp: DateTime.now(),
+              completed: false),
         ];
-        final rate = StatsCalculator.computeCompletionRate(sessions);
-        expect(rate, closeTo(2/3, 0.01));
+        final rate = StatsCalculator.computeCompletionRate(
+            sessions.map((s) => s.completed).toList());
+        expect(rate, closeTo(2 / 3, 0.01));
       });
     });
 
     group('SettingsRepository', () {
       late SettingsRepository repo;
-      late SharedPreferences prefs;
 
       setUp(() async {
         SharedPreferences.setMockInitialValues({});
-        prefs = await SharedPreferences.getInstance();
+        await SharedPreferences.getInstance();
         repo = SettingsRepository();
         await repo.init();
       });
@@ -363,7 +433,8 @@ void main() {
     group('AuthInterceptor', () {
       test('32. intercept adds Bearer token', () {
         final interceptor = AuthInterceptor(token: 'test_token');
-        final headers = interceptor.intercept({'Content-Type': 'application/json'});
+        final headers =
+            interceptor.intercept({'Content-Type': 'application/json'});
         expect(headers['Authorization'], 'Bearer test_token');
       });
 

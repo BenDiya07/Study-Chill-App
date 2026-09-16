@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../core/constants/app_constants.dart';
-import '../core/theme/app_theme.dart';
-import '../core/utils/time_formatter.dart';
-'analytics_state.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/utils/time_formatter.dart';
+import 'analytics_state.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
@@ -22,9 +21,13 @@ class AnalyticsScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Statistiques', style: GoogleFonts.plusJakartaSans(fontSize: 28, fontWeight: FontWeight.w700)),
+              Text('Statistiques',
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 28, fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
-              Text('Votre progression de concentration', style: GoogleFonts.plusJakartaSans(color: theme.colorScheme.onSurfaceVariant)),
+              Text('Votre progression de concentration',
+                  style: GoogleFonts.plusJakartaSans(
+                      color: theme.colorScheme.onSurfaceVariant)),
               const SizedBox(height: 24),
               _StatsGrid(analytics: analytics),
               const SizedBox(height: 24),
@@ -114,9 +117,14 @@ class _StatCard extends StatelessWidget {
             children: [
               Icon(icon, size: 32, color: color),
               const SizedBox(height: 8),
-              Text(value, style: GoogleFonts.jetBrainsMono(fontSize: 24, fontWeight: FontWeight.w700, color: color)),
+              Text(value,
+                  style: GoogleFonts.jetBrainsMono(
+                      fontSize: 24, fontWeight: FontWeight.w700, color: color)),
               const SizedBox(height: 4),
-              Text(label, style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              Text(label,
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
             ],
           ),
         ),
@@ -133,7 +141,7 @@ class _DailyChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final last7Days = getLast7Days();
+    final last7Days = getLastNDays(7);
     final spots = last7Days.map((day) {
       final minutes = (dailyMinutes[day] ?? 0) / 60.0;
       return FlSpot(last7Days.indexOf(day).toDouble(), minutes);
@@ -147,18 +155,37 @@ class _DailyChart extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('7 derniers jours', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w600)),
+              Text('7 derniers jours',
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16, fontWeight: FontWeight.w600)),
               const SizedBox(height: 16),
               SizedBox(
                 height: 200,
                 child: LineChart(
                   LineChartData(
-                    gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (v) => FlLine(color: theme.dividerColor)),
+                    gridData: FlGridData(
+                        drawVerticalLine: false,
+                        getDrawingHorizontalLine: (v) =>
+                            FlLine(color: theme.dividerColor)),
                     titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 40, getTitlesWidget: (v, _) => Text('${v.toInt()}h', style: GoogleFonts.plusJakartaSans(fontSize: 10)))),
-                      bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (v, _) => v.toInt() < last7Days.length ? Text(formatDay(last7Days[v.toInt()]), style: GoogleFonts.plusJakartaSans(fontSize: 10)) : const Text(''))),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 40,
+                              getTitlesWidget: (v, _) => Text('${v.toInt()}h',
+                                  style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 10)))),
+                      bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (v, _) =>
+                                  v.toInt() < last7Days.length
+                                      ? Text(formatDay(last7Days[v.toInt()]),
+                                          style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 10))
+                                      : const Text(''))),
+                      topTitles: const AxisTitles(),
+                      rightTitles: const AxisTitles(),
                     ),
                     borderData: FlBorderData(show: false),
                     lineBarsData: [
@@ -167,8 +194,14 @@ class _DailyChart extends StatelessWidget {
                         isCurved: true,
                         color: theme.colorScheme.primary,
                         barWidth: 3,
-                        dotData: FlDotData(show: true, getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(radius: 4, color: theme.colorScheme.primary)),
-                        belowBarData: BarAreaData(show: true, color: theme.colorScheme.primary.withValues(alpha: 0.1)),
+                        dotData: FlDotData(
+                            getDotPainter: (spot, _, __, ___) =>
+                                FlDotCirclePainter(
+                                    radius: 4,
+                                    color: theme.colorScheme.primary)),
+                        belowBarData: BarAreaData(
+                            show: true,
+                            color: theme.colorScheme.primary.withOpacity(0.1)),
                       ),
                     ],
                     minX: 0,
@@ -200,7 +233,10 @@ class _CategoryChart extends StatelessWidget {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Center(child: Text('Aucune donnée', style: GoogleFonts.plusJakartaSans(color: theme.colorScheme.onSurfaceVariant))),
+          child: Center(
+              child: Text('Aucune donnée',
+                  style: GoogleFonts.plusJakartaSans(
+                      color: theme.colorScheme.onSurfaceVariant))),
         ),
       );
     }
@@ -213,7 +249,9 @@ class _CategoryChart extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Par catégorie', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w600)),
+              Text('Par catégorie',
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16, fontWeight: FontWeight.w600)),
               const SizedBox(height: 16),
               SizedBox(
                 height: 200,
@@ -222,7 +260,8 @@ class _CategoryChart extends StatelessWidget {
                     sections: entries.asMap().entries.map((e) {
                       final index = e.key;
                       final entry = e.value;
-                      final percentage = total > 0 ? (entry.value / total * 100) : 0.0;
+                      final percentage =
+                          total > 0 ? (entry.value / total * 100) : 0.0;
                       final colors = [
                         theme.colorScheme.primary,
                         theme.colorScheme.secondary,
@@ -236,8 +275,14 @@ class _CategoryChart extends StatelessWidget {
                         title: '${percentage.toStringAsFixed(0)}%',
                         color: colors[index % colors.length],
                         radius: 80,
-                        titleStyle: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
-                        badgeWidget: Text(entry.key, style: GoogleFonts.plusJakartaSans(fontSize: 10, color: colors[index % colors.length])),
+                        titleStyle: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white),
+                        badgeWidget: Text(entry.key,
+                            style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10,
+                                color: colors[index % colors.length])),
                         badgePositionPercentageOffset: 1.3,
                       );
                     }).toList(),
@@ -264,9 +309,16 @@ class _CategoryChart extends StatelessWidget {
                   return Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(width: 12, height: 12, decoration: BoxDecoration(color: colors[index % colors.length], shape: BoxShape.circle)),
+                      Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                              color: colors[index % colors.length],
+                              shape: BoxShape.circle)),
                       const SizedBox(width: 8),
-                      Text('${entry.key}: ${formatDurationLong(entry.value * 60)}', style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+                      Text(
+                          '${entry.key}: ${formatDurationLong(entry.value * 60)}',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 12)),
                     ],
                   );
                 }).toList(),
@@ -292,7 +344,10 @@ class _RecentSessions extends StatelessWidget {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Center(child: Text('Aucune session récente', style: GoogleFonts.plusJakartaSans(color: theme.colorScheme.onSurfaceVariant))),
+          child: Center(
+              child: Text('Aucune session récente',
+                  style: GoogleFonts.plusJakartaSans(
+                      color: theme.colorScheme.onSurfaceVariant))),
         ),
       );
     }
@@ -305,28 +360,42 @@ class _RecentSessions extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Text('Sessions récentes', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w600)),
+              child: Text('Sessions récentes',
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16, fontWeight: FontWeight.w600)),
             ),
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: sessions.length,
-              separatorBuilder: (_, __) => Divider(height: 1, indent: 16, endIndent: 16, color: theme.dividerColor),
+              separatorBuilder: (_, __) => Divider(
+                  height: 1,
+                  indent: 16,
+                  endIndent: 16,
+                  color: theme.dividerColor),
               itemBuilder: (context, index) {
                 final s = sessions[index];
                 return ListTile(
                   leading: CircleAvatar(
                     backgroundColor: theme.colorScheme.primaryContainer,
                     child: Icon(
-                      s.mode == TimerMode.work ? Icons.center_focus_strong : Icons.coffee,
+                      s.mode == TimerMode.work
+                          ? Icons.center_focus_strong
+                          : Icons.coffee,
                       color: theme.colorScheme.onPrimaryContainer,
                     ),
                   ),
-                  title: Text(s.category, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
-                  subtitle: Text(formatDateTime(s.timestamp), style: GoogleFonts.plusJakartaSans(fontSize: 12)),
+                  title: Text(s.category,
+                      style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w600)),
+                  subtitle: Text(formatDateTime(s.timestamp),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 12)),
                   trailing: Text(
                     formatDuration(s.durationSeconds),
-                    style: GoogleFonts.jetBrainsMono(fontSize: 14, fontWeight: FontWeight.w600, color: theme.colorScheme.primary),
+                    style: GoogleFonts.jetBrainsMono(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.primary),
                   ),
                 );
               },
