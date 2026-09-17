@@ -16,7 +16,7 @@ import 'package:study_chill_app/features/analytics/analytics_screen.dart';
 import 'package:study_chill_app/features/analytics/analytics_state.dart';
 import 'package:study_chill_app/features/settings/settings_screen.dart';
 import 'package:study_chill_app/features/settings/settings_state.dart';
-import 'package:study_chill_app/l10n/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 @GenerateMocks([TaskRepository, SessionRepository, SettingsRepository])
 void main() {

@@ -16,7 +16,7 @@ import 'features/analytics/analytics_state.dart';
 import 'features/analytics/analytics_screen.dart';
 import 'features/settings/settings_state.dart';
 import 'features/settings/settings_screen.dart';
-import 'l10n/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
