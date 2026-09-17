@@ -142,21 +142,18 @@ class _ThemeSelector extends StatelessWidget {
             value: ThemeMode.light,
             groupValue: current,
             onChanged: (v) => onChanged(v!),
-            semanticLabel: 'Thème clair',
           ),
           RadioListTile<ThemeMode>(
             title: const Text('Sombre'),
             value: ThemeMode.dark,
             groupValue: current,
             onChanged: (v) => onChanged(v!),
-            semanticLabel: 'Thème sombre',
           ),
           RadioListTile<ThemeMode>(
             title: const Text('Système'),
             value: ThemeMode.system,
             groupValue: current,
             onChanged: (v) => onChanged(v!),
-            semanticLabel: 'Thème système',
           ),
         ],
       ),
@@ -189,7 +186,6 @@ class _LocaleSelector extends StatelessWidget {
             value: const Locale('fr', 'FR'),
             groupValue: current,
             onChanged: (v) => onChanged(v!),
-            semanticLabel: 'Français',
           ),
           RadioListTile<Locale>(
             title: Row(
@@ -201,7 +197,6 @@ class _LocaleSelector extends StatelessWidget {
             value: const Locale('en', 'US'),
             groupValue: current,
             onChanged: (v) => onChanged(v!),
-            semanticLabel: 'English',
           ),
         ],
       ),
