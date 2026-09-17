@@ -201,7 +201,7 @@ class _DailyChart extends StatelessWidget {
                                     color: theme.colorScheme.primary)),
                         belowBarData: BarAreaData(
                             show: true,
-                            color: theme.colorScheme.primary.withOpacity(0.1)),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1)),
                       ),
                     ],
                     minX: 0,

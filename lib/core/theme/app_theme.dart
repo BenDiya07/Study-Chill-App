@@ -16,7 +16,7 @@ class AppTheme {
     return base.copyWith(
       scaffoldBackgroundColor: const Color(0xFFFDFBF5),
       cardColor: Colors.white,
-      dividerColor: Colors.amber.withOpacity(0.12),
+      dividerColor: Colors.amber.withValues(alpha: 0.12),
       extensions: const <ThemeExtension<dynamic>>[
         CustomColorsLight(),
       ],
@@ -39,7 +39,7 @@ class AppTheme {
     return base.copyWith(
       scaffoldBackgroundColor: const Color(0xFF121212),
       cardColor: const Color(0xFF1E1E1E),
-      dividerColor: Colors.amber.withOpacity(0.16),
+      dividerColor: Colors.amber.withValues(alpha: 0.16),
       extensions: const <ThemeExtension<dynamic>>[
         CustomColorsDark(),
       ],
