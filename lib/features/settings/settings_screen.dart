@@ -126,30 +126,38 @@ class _ThemeSelector extends StatelessWidget {
   final ThemeMode current;
   final ValueChanged<ThemeMode> onChanged;
 
-  const _ThemeSelector({required this.current, required this.onChanged});
+  const _ThemeSelector({
+    required this.current,
+    required this.onChanged,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      key: ValueKey('theme_selector'),
       child: Column(
         children: [
           RadioListTile<ThemeMode>(
-            title: Text('Clair', style: GoogleFonts.plusJakartaSans()),
+            title: const Text('Clair'),
             value: ThemeMode.light,
             groupValue: current,
             onChanged: (v) => onChanged(v!),
+            semanticLabel: 'Thème clair',
           ),
           RadioListTile<ThemeMode>(
-            title: Text('Sombre', style: GoogleFonts.plusJakartaSans()),
+            title: const Text('Sombre'),
             value: ThemeMode.dark,
             groupValue: current,
             onChanged: (v) => onChanged(v!),
+            semanticLabel: 'Thème sombre',
           ),
           RadioListTile<ThemeMode>(
-            title: Text('Système', style: GoogleFonts.plusJakartaSans()),
+            title: const Text('Système'),
             value: ThemeMode.system,
             groupValue: current,
             onChanged: (v) => onChanged(v!),
+            semanticLabel: 'Thème système',
           ),
         ],
       ),
@@ -161,11 +169,16 @@ class _LocaleSelector extends StatelessWidget {
   final Locale current;
   final ValueChanged<Locale> onChanged;
 
-  const _LocaleSelector({required this.current, required this.onChanged});
+  const _LocaleSelector({
+    required this.current,
+    required this.onChanged,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      key: ValueKey('locale_selector'),
       child: Column(
         children: [
           RadioListTile<Locale>(
@@ -178,6 +191,7 @@ class _LocaleSelector extends StatelessWidget {
             value: const Locale('fr', 'FR'),
             groupValue: current,
             onChanged: (v) => onChanged(v!),
+            semanticLabel: 'Français',
           ),
           RadioListTile<Locale>(
             title: Row(
@@ -189,10 +203,13 @@ class _LocaleSelector extends StatelessWidget {
             value: const Locale('en', 'US'),
             groupValue: current,
             onChanged: (v) => onChanged(v!),
+            semanticLabel: 'English',
           ),
         ],
       ),
     );
+  }
+}
   }
 }
 
@@ -201,12 +218,17 @@ class _DurationSetting extends StatelessWidget {
   final int value;
   final ValueChanged<int> onChanged;
 
-  const _DurationSetting(
-      {required this.label, required this.value, required this.onChanged});
+  const _DurationSetting({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      key: ValueKey(label),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -240,12 +262,17 @@ class _VolumeSetting extends StatelessWidget {
   final double value;
   final ValueChanged<double> onChanged;
 
-  const _VolumeSetting(
-      {required this.label, required this.value, required this.onChanged});
+  const _VolumeSetting({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      key: ValueKey(label),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

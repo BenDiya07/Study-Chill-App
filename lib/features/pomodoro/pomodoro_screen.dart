@@ -18,9 +18,13 @@ class PomodoroScreen extends HookConsumerWidget {
 
     final progressAnimation = useAnimationController(
       duration: const Duration(milliseconds: 500),
-      initialValue: 1.0 - state.progress,
     );
-    progressAnimation.animateTo(1.0 - state.progress);
+    progressAnimation.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        progressAnimation.value = 1.0 - state.progress;
+      }
+    });
+    progressAnimation.animateTo(1.0 - state.progress, duration: const Duration(milliseconds: 500));
 
     final color = switch (state.mode) {
       TimerMode.work => custom.timerWorkColor,
@@ -97,7 +101,7 @@ class PomodoroScreen extends HookConsumerWidget {
 class _ModeIndicator extends StatelessWidget {
   final TimerMode mode;
 
-  const _ModeIndicator({required this.mode});
+  const _ModeIndicator({required this.mode, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -224,6 +228,7 @@ class _ControlButton extends StatelessWidget {
     required this.onPressed,
     required this.semanticLabel,
     this.isPrimary = false,
+    super.key,
   });
 
   @override
@@ -252,7 +257,7 @@ class _ControlButton extends StatelessWidget {
 class _SessionCounter extends StatelessWidget {
   final int count;
 
-  const _SessionCounter({required this.count});
+  const _SessionCounter({required this.count, super.key});
 
   @override
   Widget build(BuildContext context) {
