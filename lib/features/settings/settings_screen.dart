@@ -129,13 +129,12 @@ class _ThemeSelector extends StatelessWidget {
   const _ThemeSelector({
     required this.current,
     required this.onChanged,
-    super.key,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      key: ValueKey('theme_selector'),
+      key: const ValueKey('theme_selector'),
       child: Column(
         children: [
           RadioListTile<ThemeMode>(
@@ -172,13 +171,12 @@ class _LocaleSelector extends StatelessWidget {
   const _LocaleSelector({
     required this.current,
     required this.onChanged,
-    super.key,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      key: ValueKey('locale_selector'),
+      key: const ValueKey('locale_selector'),
       child: Column(
         children: [
           RadioListTile<Locale>(
@@ -210,8 +208,6 @@ class _LocaleSelector extends StatelessWidget {
     );
   }
 }
-  }
-}
 
 class _DurationSetting extends StatelessWidget {
   final String label;
@@ -222,7 +218,6 @@ class _DurationSetting extends StatelessWidget {
     required this.label,
     required this.value,
     required this.onChanged,
-    super.key,
   });
 
   @override
@@ -266,7 +261,6 @@ class _VolumeSetting extends StatelessWidget {
     required this.label,
     required this.value,
     required this.onChanged,
-    super.key,
   });
 
   @override

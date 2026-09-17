@@ -75,7 +75,6 @@ class _MasterVolumeControl extends StatelessWidget {
     required this.isMuted,
     required this.onVolumeChanged,
     required this.onMuteToggle,
-    super.key,
   });
 
   @override
@@ -123,7 +122,6 @@ class _PresetButtons extends StatelessWidget {
 
   const _PresetButtons({
     required this.onPresetSelected,
-    super.key,
   });
 
   @override
@@ -176,7 +174,6 @@ class _ChannelSlider extends StatelessWidget {
     required this.effectiveVolume,
     required this.onToggle,
     required this.onVolumeChanged,
-    super.key,
   });
 
   IconData _getIcon(String name) {
@@ -279,7 +276,7 @@ class _ChannelSlider extends StatelessWidget {
 class _StopAllButton extends StatelessWidget {
   final VoidCallback onPressed;
 
-  const _StopAllButton({required this.onPressed, super.key});
+  const _StopAllButton({required this.onPressed});
 
   @override
   Widget build(BuildContext context) {

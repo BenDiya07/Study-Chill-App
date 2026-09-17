@@ -101,7 +101,7 @@ class PomodoroScreen extends HookConsumerWidget {
 class _ModeIndicator extends StatelessWidget {
   final TimerMode mode;
 
-  const _ModeIndicator({required this.mode, super.key});
+  const _ModeIndicator({required this.mode});
 
   @override
   Widget build(BuildContext context) {
@@ -228,7 +228,6 @@ class _ControlButton extends StatelessWidget {
     required this.onPressed,
     required this.semanticLabel,
     this.isPrimary = false,
-    super.key,
   });
 
   @override
@@ -257,7 +256,7 @@ class _ControlButton extends StatelessWidget {
 class _SessionCounter extends StatelessWidget {
   final int count;
 
-  const _SessionCounter({required this.count, super.key});
+  const _SessionCounter({required this.count});
 
   @override
   Widget build(BuildContext context) {
@@ -274,7 +273,7 @@ class _SessionCounter extends StatelessWidget {
               size: 12,
               color: i < count
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                  : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
             ),
           ),
         ),
@@ -300,7 +299,7 @@ class _CircularProgressPainter extends CustomPainter {
     final radius = (size.width - strokeWidth) / 2;
 
     final bgPaint = Paint()
-      ..color = color.withOpacity(0.1)
+      ..color = color.withValues(alpha: 0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;

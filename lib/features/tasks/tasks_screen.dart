@@ -151,7 +151,7 @@ class _EmptyState extends StatelessWidget {
 class _TaskItem extends ConsumerWidget {
   final Task task;
 
-  const _TaskItem({required this.task, super.key});
+  const _TaskItem({required this.task});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -242,7 +242,7 @@ class _TaskItem extends ConsumerWidget {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: priorityColor.withOpacity(0.15),
+                                  color: priorityColor.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
@@ -378,7 +378,7 @@ class _AddTaskButton extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<TaskPriority>(
-                  value: priority,
+                  initialValue: priority,
                   decoration: const InputDecoration(labelText: 'Priorité'),
                   items: TaskPriority.values
                       .map((p) => DropdownMenuItem(
@@ -390,7 +390,7 @@ class _AddTaskButton extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
-                  value: targetPomodoros,
+                  initialValue: targetPomodoros,
                   decoration:
                       const InputDecoration(labelText: 'Objectif Pomodoros'),
                   items: [1, 2, 3, 4, 5, 6, 8, 10]
@@ -400,7 +400,7 @@ class _AddTaskButton extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: category,
+                  initialValue: category,
                   decoration: const InputDecoration(labelText: 'Catégorie'),
                   items: <String>{'Général', ...categories, 'Nouvelle...'}
                       .map((c) => DropdownMenuItem(value: c, child: Text(c)))

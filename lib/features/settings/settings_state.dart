@@ -109,7 +109,7 @@ final localeProvider = Provider<Locale>((ref) {
   return ref.watch(settingsProvider).when(
         data: (s) => s.locale,
         loading: () => const Locale('fr', 'FR'),
-        error: (_, __) => Locale('fr', 'FR'),
+        error: (_, __) => const Locale('fr', 'FR'),
       );
 });
 
