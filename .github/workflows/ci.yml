@@ -53,7 +53,8 @@ jobs:
           flutter test --coverage --reporter=expanded
           echo "All unit and widget tests passed with 100% success rate."
 
-      - name: Install Linux Desktop Build Dependencies
+- name: Install Linux Desktop Build Dependencies
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev ninja-build xvfb \
@@ -61,9 +62,9 @@ jobs:
             gstreamer1.0-plugins-base
 
       - name: Run Integration Tests (Linux desktop device)
-        run: |
-          xvfb-run -a flutter test integration_test/app_integration_test.dart -d linux
-          echo "Integration tests passed successfully."
+        if: runner.os == 'Linux'
+        run: xvfb-run -a flutter test integration_test/app_integration_test.dart -d linux
+        timeout-minutes: 10
 
       - name: Build Web App Bundle
         run: flutter build web --release --pwa-strategy=offline-first
