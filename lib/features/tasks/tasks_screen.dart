@@ -151,7 +151,7 @@ class _EmptyState extends StatelessWidget {
 class _TaskItem extends ConsumerWidget {
   final Task task;
 
-  const _TaskItem({required this.task});
+  const _TaskItem({required this.task, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -168,9 +168,11 @@ class _TaskItem extends ConsumerWidget {
     return Semantics(
       label:
           'Tâche: ${task.title}, ${task.isCompleted ? "terminée" : "en cours"}, priorité ${task.priority.name}, ${task.completedPomodoros}/${task.targetPomodoros} pomodoros',
+      button: task.isCompleted,
       child: Dismissible(
         key: Key(task.id),
         direction: DismissDirection.endToStart,
+        onDismissed: (_) => repo.deleteTask(task.id),
         background: Container(
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.only(right: 20),
@@ -201,7 +203,6 @@ class _TaskItem extends ConsumerWidget {
               ) ??
               false;
         },
-        onDismissed: (_) => repo.deleteTask(task.id),
         child: Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
