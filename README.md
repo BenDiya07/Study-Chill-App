@@ -1,7 +1,7 @@
 #  Study Chill — Production Ready Flutter & Web App
 
 [![Flutter CI](https://img.shields.io/badge/CI-GitHub_Actions_Passing-success?style=flat-square&logo=github-actions)](https://github.com/)
-[![Tests](https://img.shields.io/badge/Tests-63%2F63_Passing_(100%25)-success?style=flat-square&logo=flutter)](https://flutter.dev)
+[![Tests](https://img.shields.io/badge/Tests-58_Passing_(100%25)-success?style=flat-square&logo=flutter)](https://flutter.dev)
 [![Flutter Version](https://img.shields.io/badge/Flutter-3.24.x_Stable-02569B?style=flat-square&logo=flutter)](https://flutter.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![i18n](https://img.shields.io/badge/i18n-FR%20%7C%20EN-blue?style=flat-square)](https://docs.flutter.dev/accessibility-and-localization/internationalization)
@@ -52,9 +52,9 @@ lib/
 
 ---
 
-##  Suite de Tests Complète (63 Tests - 100% Succès)
+##  Suite de Tests Complète (58 Tests Unitaires + Widgets - 100% Succès)
 
-La suite de tests est organisée en **tests unitaires**, **tests de widgets** et **tests d'intégration** exécutés par GitHub Actions à chaque push.
+La suite de tests est organisée en **tests unitaires** et **tests de widgets** (exécutés par `flutter test`) ainsi que **5 tests d'intégration** (exécutés par `flutter test integration_test/`), tous passés avec succès.
 
 ### 1. Tests Unitaires (34 tests)
 1. `PomodoroNotifier` : État initial, décrément de `tick()`, transitions vers pause courte / pause longue, démarrage, pause, réinitialisation, saut de session et ajustement des durées.
